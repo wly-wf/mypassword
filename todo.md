@@ -16,12 +16,12 @@
 
 ## 阶段二：数据层
 
-- [ ] **2.1** 定义 `Entry` 实体（Room Entity，字段：id, type, target, username, password, note, createdAt, updatedAt）
-- [ ] **2.2** 编写 `EntryDao`（增删改查 + 按类型筛选 + 关键词搜索）
-- [ ] **2.3** 实现 `AppDatabase`（Room + SQLCipher 加密支持，通过 SupportFactory 传入加密密钥）
-- [ ] **2.4** 实现 `KeyDerivation` 工具类（Argon2id 主密码 → 派生 256 位密钥 + 验证哈希）
-- [ ] **2.5** 实现 `SessionManager`（管理数据库密钥缓存：内存缓存 + Android Keystore 持久化，供指纹解锁使用）
-- [ ] **2.6** 实现 `EntryRepository`（封装 DAO 操作，提供 Flow<List<Entry>> 响应式数据流）
+- [x] **2.1** 定义 `Entry` 实体（Room Entity，字段：id, type, target, username, password, note, createdAt, updatedAt）
+- [x] **2.2** 编写 `EntryDao`（增删改查 + 按类型筛选 + 关键词搜索）
+- [x] **2.3** 实现 `AppDatabase`（Room + SQLCipher 加密支持，通过 SupportFactory 传入加密密钥）
+- [x] **2.4** 实现 `KeyDerivation` 工具类（Argon2id 主密码 → 派生 256 位密钥 + 验证哈希）
+- [x] **2.5** 实现 `SessionManager`（管理数据库密钥缓存：内存缓存 + Android Keystore 持久化，供指纹解锁使用）
+- [x] **2.6** 实现 `EntryRepository`（封装 DAO 操作，提供 Flow<List<Entry>> 响应式数据流）
 
 ---
 
