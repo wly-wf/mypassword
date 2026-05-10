@@ -6,11 +6,11 @@
 
 ## 阶段一：项目脚手架
 
-- [ ] **1.1** 创建 Android 项目（Kotlin + Jetpack Compose，包名 `com.mypassword.app`，minSdk 26，targetSdk 35）
-- [ ] **1.2** 配置 `build.gradle`（添加 Room、SQLCipher、BouncyCastle、Biometric、Navigation Compose、Material 3 依赖）
-- [ ] **1.3** 配置混淆规则（SQLCipher 和 BouncyCastle 的 proguard 规则）
-- [ ] **1.4** 搭建 Material You 主题（跟随系统壁纸动态取色，亮/暗色模式支持）
-- [ ] **1.5** 搭建单 Activity 导航骨架（MainActivity + NavHost，定义各页面路由）
+- [x] **1.1** 创建 Android 项目（Kotlin + Jetpack Compose，包名 `com.mypassword.app`，minSdk 26，targetSdk 35）
+- [x] **1.2** 配置 `build.gradle`（添加 Room、SQLCipher、BouncyCastle、Biometric、Navigation Compose、Material 3 依赖）
+- [x] **1.3** 配置混淆规则（SQLCipher 和 BouncyCastle 的 proguard 规则）
+- [x] **1.4** 搭建 Material You 主题（跟随系统壁纸动态取色，亮/暗色模式支持）
+- [x] **1.5** 搭建单 Activity 导航骨架（MainActivity + NavHost，定义各页面路由）
 
 ---
 
