@@ -1,0 +1,35 @@
+# Claude local settings
+.claude/settings.local.json
+
+# Android
+*.apk
+*.aab
+*.dex
+*.class
+*.log
+*.hprof
+/app/build/
+/app/release/
+/local.properties
+/.idea/
+*.iml
+.gradle/
+build/
+captures/
+.externalNativeBuild/
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# Keystore
+*.jks
+*.keystore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets / env
+*.env
+secrets.properties
