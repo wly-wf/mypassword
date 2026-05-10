@@ -19,9 +19,8 @@ fun AppNavGraph(
         navController = navController,
         startDestination = Routes.UNLOCK
     ) {
-        // 阶段三实现
+        // 解锁
         composable(Routes.UNLOCK) {
-            // TODO: UnlockScreen(navController)
             UnlockScreen(
                 onUnlockSuccess = {
                     navController.navigate(Routes.LIST) {
@@ -31,9 +30,8 @@ fun AppNavGraph(
             )
         }
 
-        // 阶段四实现
+        // 列表（待阶段四实现）
         composable(Routes.LIST) {
-            // TODO: ListScreen(navController)
             ListScreen(
                 onAddEntry = { entryId ->
                     navController.navigate(Routes.edit(entryId))
@@ -44,20 +42,18 @@ fun AppNavGraph(
             )
         }
 
-        // 阶段五实现
+        // 编辑（待阶段五实现）
         composable(Routes.EDIT) { backStackEntry ->
             val entryId = backStackEntry.arguments
                 ?.getString("entryId")?.toLongOrNull() ?: -1
-            // TODO: EditScreen(navController, entryId)
             EditScreen(
                 entryId = entryId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        // 阶段七实现
+        // 备份（待阶段七实现）
         composable(Routes.BACKUP) {
-            // TODO: BackupScreen(navController)
             BackupScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
