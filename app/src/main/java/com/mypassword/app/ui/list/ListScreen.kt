@@ -2,7 +2,6 @@ package com.mypassword.app.ui.list
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mypassword.app.data.db.entity.Entry
 import com.mypassword.app.viewmodel.ListViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +39,8 @@ fun ListScreen(
     val entries by viewModel.entries.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val tabs = listOf("网址", "App")
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // 删除确认对话框
     if (uiState.showDeleteDialog) {
@@ -80,6 +82,7 @@ fun ListScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onAddEntry(-1) },
@@ -91,14 +94,12 @@ fun ListScreen(
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // 搜索栏
             SearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = { viewModel.onSearchQuery(it) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
-            // Tab 切换
             TabRow(selectedTabIndex = uiState.selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -115,25 +116,37 @@ fun ListScreen(
             }
 
             // 内容区
-            if (entries.isEmpty()) {
-                EmptyState(modifier = Modifier.fillMaxSize())
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(
-                        items = entries,
-                        key = { it.id }
-                    ) { entry ->
-                        EntryCard(
-                            entry = entry,
-                            onDelete = { viewModel.requestDelete(entry) },
-                            modifier = Modifier.animateItem()
-                        )
+            AnimatedContent(
+                targetState = entries.isEmpty(),
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                }
+            ) { isEmpty ->
+                if (isEmpty) {
+                    EmptyState(modifier = Modifier.fillMaxSize())
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(
+                            horizontal = 16.dp,
+                            vertical = 8.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = entries,
+                            key = { it.id }
+                        ) { entry ->
+                            EntryCard(
+                                entry = entry,
+                                onDelete = { viewModel.requestDelete(entry) },
+                                onCopyPassword = {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("密码已复制到剪贴板")
+                                    }
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
                     }
                 }
             }
@@ -164,10 +177,10 @@ private fun SearchBar(
 private fun EntryCard(
     entry: Entry,
     onDelete: () -> Unit,
+    onCopyPassword: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showPassword by remember { mutableStateOf(false) }
-    var showDelete by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
 
     Card(
@@ -268,6 +281,7 @@ private fun EntryCard(
                     IconButton(
                         onClick = {
                             clipboardManager.setText(AnnotatedString(entry.password))
+                            onCopyPassword()
                         },
                         modifier = Modifier.size(32.dp)
                     ) {
