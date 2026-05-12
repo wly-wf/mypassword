@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
-import com.mypassword.app.data.crypto.SessionManager
 import com.mypassword.app.data.db.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -108,9 +107,10 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
             try {
                 withContext(Dispatchers.IO) {
                     sessionManager.setupMasterPassword(app, pw)
-                    val salt = sessionManager.getSalt()
-                    val key = com.mypassword.app.data.crypto.KeyDerivation.deriveKey(pw, salt)
-                    app.database = AppDatabase.create(app, key)
+                    if (app.isDatabaseInitialized()) {
+                        app.database.close()
+                    }
+                    app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
                 }
                 _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
             } catch (e: Exception) {
@@ -148,9 +148,10 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
 
                 if (valid) {
                     withContext(Dispatchers.IO) {
-                        val salt = sessionManager.getSalt()
-                        val key = com.mypassword.app.data.crypto.KeyDerivation.deriveKey(password, salt)
-                        app.database = AppDatabase.create(app, key)
+                        if (app.isDatabaseInitialized()) {
+                            app.database.close()
+                        }
+                        app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
                     }
                     _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
                 } else {
@@ -219,8 +220,10 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
             viewModelScope.launch {
                 try {
                     withContext(Dispatchers.IO) {
-                        val key = sessionManager.getDatabaseKey()
-                        app.database = AppDatabase.create(app, key)
+                        if (app.isDatabaseInitialized()) {
+                            app.database.close()
+                        }
+                        app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
                     }
                     _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
                 } catch (e: Exception) {

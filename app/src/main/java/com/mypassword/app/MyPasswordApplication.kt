@@ -9,9 +9,10 @@ import com.mypassword.app.data.db.AppDatabase
 class MyPasswordApplication : Application() {
 
     lateinit var database: AppDatabase
-        internal set
     lateinit var sessionManager: SessionManager
         private set
+
+    fun isDatabaseInitialized(): Boolean = ::database.isInitialized
 
     private var activityCount = 0
 

@@ -39,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
          */
         fun rekeyDatabase(context: Context, oldKey: ByteArray, newKey: ByteArray) {
             val dbFile = context.getDatabasePath(DB_NAME)
+
             val db = net.zetetic.database.sqlcipher.SQLiteDatabase.openOrCreateDatabase(
                 dbFile.absolutePath,
                 oldKey,
@@ -46,6 +47,9 @@ abstract class AppDatabase : RoomDatabase() {
                 null
             )
             try {
+                // 将 WAL 完整合并到主文件，然后截断 WAL
+                db.rawExecSQL("PRAGMA wal_checkpoint(TRUNCATE);")
+                // 修改加密密钥
                 db.rawExecSQL("PRAGMA rekey = \"x'${newKey.toHex()}\";")
             } finally {
                 db.close()

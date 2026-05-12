@@ -162,23 +162,27 @@ fun ChangePasswordDialog(
                                 scope.launch {
                                     try {
                                         withContext(Dispatchers.IO) {
-                                            // 验证旧密码
+                                            // 1. 验证旧密码
                                             if (!app.sessionManager.verifyOldPassword(old)) {
                                                 throw Exception("当前密码错误")
                                             }
 
-                                            // 准备新凭据（生成新盐、派生新密钥、更新 Keystore）
-                                            val (oldKey, newKey) = app.sessionManager
-                                                .preparePasswordChange(app, new)
+                                            // 2. 生成新凭据（不修改持久化状态）
+                                            val creds = app.sessionManager.generateNewCredentials(new)
 
-                                            // 先关闭 Room 数据库以释放文件锁
+                                            // 3. 关闭 Room 数据库
                                             app.database.close()
 
-                                            // 直接用 SQLCipher 原生 API 修改加密密钥
-                                            AppDatabase.rekeyDatabase(app, oldKey, newKey)
+                                            // 4. 用 SQLCipher 原生 API 修改加密密钥
+                                            AppDatabase.rekeyDatabase(app, creds.oldKey, creds.newKey)
 
-                                            // 用新密钥重建 Room 数据库
-                                            app.database = AppDatabase.create(app, newKey)
+                                            // 5. rekey 成功后才持久化新凭据
+                                            app.sessionManager.commitPasswordChange(
+                                                app, creds.newSalt, creds.newKey, creds.newHash
+                                            )
+
+                                            // 6. 用新密钥重建 Room 数据库
+                                            app.database = AppDatabase.create(app, creds.newKey)
                                         }
                                         isSuccess = true
                                     } catch (e: Exception) {

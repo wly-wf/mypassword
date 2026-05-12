@@ -37,23 +37,27 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadAllEntries() {
         viewModelScope.launch {
-            repository.getAllEntries()
-                .combine(_uiState) { entries, state ->
-                    val filtered = if (state.searchQuery.isBlank()) {
-                        entries
-                    } else {
-                        val q = state.searchQuery.trim()
-                        entries.filter {
-                            it.target.contains(q, ignoreCase = true) ||
-                                it.username.contains(q, ignoreCase = true)
+            try {
+                repository.getAllEntries()
+                    .combine(_uiState) { entries, state ->
+                        val filtered = if (state.searchQuery.isBlank()) {
+                            entries
+                        } else {
+                            val q = state.searchQuery.trim()
+                            entries.filter {
+                                it.target.contains(q, ignoreCase = true) ||
+                                    it.username.contains(q, ignoreCase = true)
+                            }
                         }
+                        val type = if (state.selectedTab == 0) EntryType.URL else EntryType.APP
+                        filtered.filter { it.type == type }
                     }
-                    val type = if (state.selectedTab == 0) EntryType.URL else EntryType.APP
-                    filtered.filter { it.type == type }
-                }
-                .collect { filteredEntries ->
-                    _entries.value = filteredEntries
-                }
+                    .collect { filteredEntries ->
+                        _entries.value = filteredEntries
+                    }
+            } catch (e: Exception) {
+                _entries.value = emptyList()
+            }
         }
     }
 
