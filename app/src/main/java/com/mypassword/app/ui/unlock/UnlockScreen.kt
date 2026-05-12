@@ -209,134 +209,181 @@ private fun UnlockPasswordForm(
     viewModel: UnlockViewModel,
     uiState: com.mypassword.app.viewmodel.UnlockUiState
 ) {
-    val focusManager = LocalFocusManager.current
+    var useFullKeyboard by remember { mutableStateOf(false) }
 
-    // 密码点阵显示
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        repeat(6) { index ->
-            val filled = index < uiState.passwordInput.length
-            Box(
-                modifier = Modifier
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (filled) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surfaceVariant
+    if (useFullKeyboard) {
+        // === 全键盘模式 ===
+        var showPw by remember { mutableStateOf(false) }
+
+        OutlinedTextField(
+            value = uiState.passwordInput,
+            onValueChange = { viewModel.onPasswordInput(it) },
+            label = { Text("主密码") },
+            singleLine = true,
+            visualTransformation = if (showPw) VisualTransformation.None
+                                  else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { showPw = !showPw }) {
+                    Icon(
+                        if (showPw) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                        contentDescription = null
                     )
-                    .border(
-                        width = 1.dp,
-                        color = if (filled) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.outline,
-                        shape = CircleShape
-                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(onClick = { useFullKeyboard = false }) {
+            Text("切换到数字键盘")
+        }
+
+        // 错误消息
+        AnimatedVisibility(visible = uiState.errorMessage != null) {
+            Text(
+                text = uiState.errorMessage ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
         }
-    }
 
-    // 超过6位显示数字
-    if (uiState.passwordInput.length > 6) {
-        Text(
-            text = "+${uiState.passwordInput.length - 6}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-    }
+        Spacer(modifier = Modifier.height(12.dp))
 
-    // 错误消息
-    AnimatedVisibility(visible = uiState.errorMessage != null) {
-        Text(
-            text = uiState.errorMessage ?: "",
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(vertical = 8.dp)
-        )
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
-
-    // 数字键盘
-    val numpadKeys = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf("bio", "0", "del")
-    )
-
-    numpadKeys.forEach { row ->
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(vertical = 6.dp)
+        Button(
+            onClick = { viewModel.verifyPassword() },
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            enabled = uiState.mode != UnlockMode.WORKING &&
+                      uiState.passwordInput.isNotEmpty()
         ) {
-            row.forEach { key ->
-                when (key) {
-                    "bio" -> {
-                        if (uiState.canUseBiometric) {
+            Text("解锁", style = MaterialTheme.typography.labelLarge)
+        }
+    } else {
+        // === 数字键盘模式 ===
+        // 密码点阵显示
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            repeat(6) { index ->
+                val filled = index < uiState.passwordInput.length
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (filled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (filled) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.outline,
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
+
+        if (uiState.passwordInput.length > 6) {
+            Text(
+                text = "+${uiState.passwordInput.length - 6}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+
+        AnimatedVisibility(visible = uiState.errorMessage != null) {
+            Text(
+                text = uiState.errorMessage ?: "",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        // 全键盘切换按钮
+        TextButton(onClick = { useFullKeyboard = true }) {
+            Text("使用全键盘（含字母）")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val numpadKeys = listOf(
+            listOf("1", "2", "3"),
+            listOf("4", "5", "6"),
+            listOf("7", "8", "9"),
+            listOf("bio", "0", "del")
+        )
+
+        numpadKeys.forEach { row ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(vertical = 6.dp)
+            ) {
+                row.forEach { key ->
+                    when (key) {
+                        "bio" -> {
+                            if (uiState.canUseBiometric) {
+                                NumpadKey(
+                                    content = {
+                                        Icon(
+                                            Icons.Default.Fingerprint,
+                                            contentDescription = "指纹",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    },
+                                    onClick = { viewModel.switchToPasswordMode() },
+                                    modifier = Modifier.size(72.dp)
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.size(72.dp))
+                            }
+                        }
+                        "del" -> {
+                            NumpadKey(
+                                content = { Text("⌫", fontSize = 22.sp) },
+                                onClick = { viewModel.deleteLastChar() },
+                                modifier = Modifier.size(72.dp),
+                                enabled = uiState.mode != UnlockMode.WORKING &&
+                                          uiState.passwordInput.isNotEmpty()
+                            )
+                        }
+                        else -> {
                             NumpadKey(
                                 content = {
-                                    Icon(
-                                        Icons.Default.Fingerprint,
-                                        contentDescription = "指纹",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(28.dp)
-                                    )
+                                    Text(key, fontSize = 26.sp, fontWeight = FontWeight.Medium)
                                 },
-                                onClick = {
-                                    viewModel.switchToPasswordMode()
-                                    // 切换到生物识别模式
-                                },
-                                modifier = Modifier.size(72.dp)
+                                onClick = { viewModel.appendDigit(key.toInt()) },
+                                modifier = Modifier.size(72.dp),
+                                enabled = uiState.mode != UnlockMode.WORKING
                             )
-                        } else {
-                            Spacer(modifier = Modifier.size(72.dp))
                         }
-                    }
-                    "del" -> {
-                        NumpadKey(
-                            content = {
-                                Text("⌫", fontSize = 22.sp)
-                            },
-                            onClick = { viewModel.deleteLastChar() },
-                            modifier = Modifier.size(72.dp),
-                            enabled = uiState.mode != UnlockMode.WORKING &&
-                                      uiState.passwordInput.isNotEmpty()
-                        )
-                    }
-                    else -> {
-                        NumpadKey(
-                            content = {
-                                Text(
-                                    key,
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            },
-                            onClick = { viewModel.appendDigit(key.toInt()) },
-                            modifier = Modifier.size(72.dp),
-                            enabled = uiState.mode != UnlockMode.WORKING
-                        )
                     }
                 }
             }
         }
-    }
 
-    Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-    // 确认按钮
-    Button(
-        onClick = { viewModel.verifyPassword() },
-        modifier = Modifier
-            .fillMaxWidth(0.6f)
-            .height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-        enabled = uiState.mode != UnlockMode.WORKING &&
-                  uiState.passwordInput.isNotEmpty()
-    ) {
-        Text("解锁", style = MaterialTheme.typography.labelLarge)
+        Button(
+            onClick = { viewModel.verifyPassword() },
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            enabled = uiState.mode != UnlockMode.WORKING &&
+                      uiState.passwordInput.isNotEmpty()
+        ) {
+            Text("解锁", style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
 
