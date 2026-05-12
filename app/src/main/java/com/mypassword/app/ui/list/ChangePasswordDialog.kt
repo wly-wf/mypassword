@@ -171,11 +171,13 @@ fun ChangePasswordDialog(
                                             val (oldKey, newKey) = app.sessionManager
                                                 .preparePasswordChange(app, new)
 
-                                            // 执行数据库 rekey
-                                            app.database.rekey(newKey)
-
-                                            // 关闭并重建数据库
+                                            // 先关闭 Room 数据库以释放文件锁
                                             app.database.close()
+
+                                            // 直接用 SQLCipher 原生 API 修改加密密钥
+                                            AppDatabase.rekeyDatabase(app, oldKey, newKey)
+
+                                            // 用新密钥重建 Room 数据库
                                             app.database = AppDatabase.create(app, newKey)
                                         }
                                         isSuccess = true

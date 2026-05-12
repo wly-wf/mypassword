@@ -19,20 +19,11 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun entryDao(): EntryDao
 
-    /**
-     * 修改数据库加密密钥（PRAGMA rekey），完成后需 close() 并重新 create()
-     */
-    fun rekey(newPassphrase: ByteArray) {
-        val hexKey = newPassphrase.joinToString(separator = "") { "%02x".format(it) }
-        openHelper.writableDatabase.execSQL("PRAGMA rekey = \"x'$hexKey'\";")
-    }
-
     companion object {
         private const val DB_NAME = "mypassword.db"
 
         fun create(context: Context, passphrase: ByteArray): AppDatabase {
             val factory = SupportOpenHelperFactory(passphrase)
-
             return Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
@@ -41,5 +32,27 @@ abstract class AppDatabase : RoomDatabase() {
                 .openHelperFactory(factory)
                 .build()
         }
+
+        /**
+         * 绕过 Room，直接用 SQLCipher 原生 API 修改数据库加密密钥。
+         * 调用前必须先关闭 Room 数据库，完成后用新密钥重新 create()。
+         */
+        fun rekeyDatabase(context: Context, oldKey: ByteArray, newKey: ByteArray) {
+            val dbFile = context.getDatabasePath(DB_NAME)
+            val db = net.zetetic.database.sqlcipher.SQLiteDatabase.openOrCreateDatabase(
+                dbFile.absolutePath,
+                oldKey,
+                null,
+                null
+            )
+            try {
+                db.rawExecSQL("PRAGMA rekey = \"x'${newKey.toHex()}\";")
+            } finally {
+                db.close()
+            }
+        }
+
+        private fun ByteArray.toHex(): String =
+            joinToString(separator = "") { "%02x".format(it) }
     }
 }
