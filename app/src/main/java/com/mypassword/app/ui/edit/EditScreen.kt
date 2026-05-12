@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mypassword.app.data.db.entity.EntryType
+import com.mypassword.app.ui.generator.PasswordGeneratorDialog
 import com.mypassword.app.viewmodel.EditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +30,18 @@ fun EditScreen(
     viewModel: EditViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showGenerator by remember { mutableStateOf(false) }
+
+    // 密码生成器弹窗
+    if (showGenerator) {
+        PasswordGeneratorDialog(
+            onDismiss = { showGenerator = false },
+            onPasswordSelected = {
+                viewModel.onPasswordGenerated(it)
+                showGenerator = false
+            }
+        )
+    }
 
     // 加载已有条目数据
     LaunchedEffect(entryId) {
@@ -143,10 +156,8 @@ fun EditScreen(
                                 contentDescription = null
                             )
                         }
-                        // 密码生成器按钮（阶段六实现弹窗）
-                        IconButton(onClick = {
-                            viewModel.onPasswordGenerated(generateRandomPassword())
-                        }) {
+                        // 密码生成器按钮
+                        IconButton(onClick = { showGenerator = true }) {
                             Icon(
                                 Icons.Default.AutoAwesome,
                                 contentDescription = "生成密码",
@@ -210,23 +221,4 @@ private fun TypeSelector(
             )
         }
     }
-}
-
-/**
- * 简单随机密码生成（阶段六将替换为完整弹窗）
- */
-private fun generateRandomPassword(
-    length: Int = 16,
-    includeUpper: Boolean = true,
-    includeLower: Boolean = true,
-    includeDigits: Boolean = true,
-    includeSymbols: Boolean = true
-): String {
-    val chars = buildString {
-        if (includeUpper) append("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        if (includeLower) append("abcdefghijklmnopqrstuvwxyz")
-        if (includeDigits) append("0123456789")
-        if (includeSymbols) append("!@#$%^&*()-_=+")
-    }
-    return (1..length).map { chars.random() }.joinToString("")
 }
