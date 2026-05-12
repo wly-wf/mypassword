@@ -71,15 +71,15 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
-    implementation("net.zetetic:android-database-sqlcipher:4.5.7")
-    implementation("androidx.sqlite:sqlite:2.4.0")
-    implementation("androidx.sqlite:sqlite-framework:2.4.0")
+    implementation("net.zetetic:sqlcipher-android:4.15.0")
+    implementation("androidx.sqlite:sqlite:2.5.0")
+    implementation("androidx.sqlite:sqlite-framework:2.5.0")
 
     // BouncyCastle (Argon2)
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
 
     // Biometric
-    implementation("androidx.biometric:biometric:1.4.0")
+    implementation("androidx.biometric:biometric:1.1.0")
 
     // Core
     implementation("androidx.core:core-ktx:1.13.1")

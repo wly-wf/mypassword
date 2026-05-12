@@ -1,6 +1,5 @@
 # SQLCipher
--keep class net.sqlcipher.** { *; }
--keep class net.sqlcipher.database.** { *; }
+-keep class net.zetetic.database.** { *; }
 
 # BouncyCastle
 -keep class org.bouncycastle.** { *; }

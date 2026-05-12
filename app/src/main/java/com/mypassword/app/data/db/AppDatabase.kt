@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.mypassword.app.data.db.dao.EntryDao
 import com.mypassword.app.data.db.entity.Entry
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SupportFactory
 
 @Database(
     entities = [Entry::class],
