@@ -72,8 +72,8 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("net.zetetic:sqlcipher-android:4.15.0")
-    implementation("androidx.sqlite:sqlite:2.5.0")
-    implementation("androidx.sqlite:sqlite-framework:2.5.0")
+    implementation("androidx.sqlite:sqlite:2.6.2")
+    implementation("androidx.sqlite:sqlite-framework:2.6.2")
 
     // BouncyCastle (Argon2)
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")

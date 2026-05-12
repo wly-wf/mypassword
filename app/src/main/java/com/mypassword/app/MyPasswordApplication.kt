@@ -18,6 +18,14 @@ class MyPasswordApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+        // 预加载 SQLCipher 原生库，避免首次查询时找不到 .so 文件
+        try {
+            System.loadLibrary("sqlcipher")
+        } catch (_: UnsatisfiedLinkError) {
+            // 部分设备可能不包含原生库，后续 Room 会再次尝试加载
+        }
+
         sessionManager = SessionManager(this)
 
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
