@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Visibility
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 fun ListScreen(
     onAddEntry: (Long) -> Unit,
     onNavigateToBackup: () -> Unit,
+    onNavigateToUnlock: () -> Unit,
     viewModel: ListViewModel = viewModel()
 ) {
     val entries by viewModel.entries.collectAsState()
@@ -42,6 +44,17 @@ fun ListScreen(
     val tabs = listOf("网址", "App")
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var showChangePassword by remember { mutableStateOf(false) }
+
+    if (showChangePassword) {
+        ChangePasswordDialog(
+            onDismiss = { showChangePassword = false },
+            onSuccess = {
+                showChangePassword = false
+                onNavigateToUnlock()
+            }
+        )
+    }
 
     // 删除确认对话框
     if (uiState.showDeleteDialog) {
@@ -74,6 +87,12 @@ fun ListScreen(
             TopAppBar(
                 title = { Text("MyPassword") },
                 actions = {
+                    IconButton(onClick = { showChangePassword = true }) {
+                        Icon(
+                            Icons.Outlined.Settings,
+                            contentDescription = "修改主密码"
+                        )
+                    }
                     IconButton(onClick = onNavigateToBackup) {
                         Icon(
                             Icons.Outlined.FileUpload,

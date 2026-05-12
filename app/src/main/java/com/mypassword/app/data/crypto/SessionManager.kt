@@ -97,6 +97,60 @@ class SessionManager(context: Context) {
         cachedKey = key
     }
 
+    /**
+     * 验证旧密码是否正确（不派生密钥，仅验证）
+     */
+    fun verifyOldPassword(password: String): Boolean {
+        return try {
+            KeyDerivation.verifyPassword(password, getSalt(), getStoredHash())
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * 修改主密码：生成新盐值、派生新密钥、更新存储的凭据和 Keystore
+     * @return 旧密钥和新密钥
+     */
+    fun preparePasswordChange(
+        context: Context,
+        newPassword: String
+    ): Pair<ByteArray, ByteArray> {
+        val oldKey = cachedKey ?: throw IllegalStateException("数据库未解锁")
+
+        val newSalt = KeyDerivation.generateSalt()
+        val newKey = KeyDerivation.deriveKey(newPassword, newSalt)
+        val newHash = KeyDerivation.hashForVerification(newKey)
+
+        // 更新盐值和验证哈希
+        prefs.edit()
+            .putString(KEY_SALT, android.util.Base64.encodeToString(newSalt, android.util.Base64.DEFAULT))
+            .putString(KEY_HASH, android.util.Base64.encodeToString(newHash, android.util.Base64.DEFAULT))
+            .apply()
+
+        // 更新 Keystore 生物识别密钥
+        deleteBiometricKey()
+        createBiometricKey(context)
+        storeEncryptedDatabaseKey(newKey)
+
+        // 更新内存缓存
+        val oldCached = cachedKey
+        cachedKey = newKey
+        if (oldCached != null) {
+            Arrays.fill(oldCached, 0.toByte())
+        }
+
+        return Pair(oldKey, newKey)
+    }
+
+    private fun deleteBiometricKey() {
+        try {
+            val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE)
+            keyStore.load(null)
+            keyStore.deleteEntry(KEYSTORE_ALIAS)
+        } catch (_: Exception) { }
+    }
+
     fun hasMasterPassword(): Boolean {
         return prefs.contains(KEY_SALT) && prefs.contains(KEY_HASH)
     }

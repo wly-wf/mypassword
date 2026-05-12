@@ -19,6 +19,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun entryDao(): EntryDao
 
+    /**
+     * 修改数据库加密密钥（PRAGMA rekey），完成后需 close() 并重新 create()
+     */
+    fun rekey(newPassphrase: ByteArray) {
+        val hexKey = newPassphrase.joinToString(separator = "") { "%02x".format(it) }
+        openHelper.writableDatabase.execSQL("PRAGMA rekey = \"x'$hexKey'\";")
+    }
+
     companion object {
         private const val DB_NAME = "mypassword.db"
 

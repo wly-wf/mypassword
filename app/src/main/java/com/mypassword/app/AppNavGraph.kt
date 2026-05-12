@@ -30,7 +30,7 @@ fun AppNavGraph(
             )
         }
 
-        // 列表（待阶段四实现）
+        // 列表
         composable(Routes.LIST) {
             ListScreen(
                 onAddEntry = { entryId ->
@@ -38,6 +38,11 @@ fun AppNavGraph(
                 },
                 onNavigateToBackup = {
                     navController.navigate(Routes.BACKUP)
+                },
+                onNavigateToUnlock = {
+                    navController.navigate(Routes.UNLOCK) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
