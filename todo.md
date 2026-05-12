@@ -46,11 +46,11 @@
 
 ## 阶段五：添加/编辑模块
 
-- [ ] **5.1** 编写 `EditScreen` UI（表单：类型选择器、target 输入框、username、password、note + 保存按钮）
-- [ ] **5.2** URL 类型时 target 字段增加 URL 格式校验，App 类型时不做校验
-- [ ] **5.3** 实现密码可见/隐藏切换（眼睛图标，点击切换 inputType）
-- [ ] **5.4** 实现 `EditViewModel`（表单状态管理、校验、保存新增/更新到 Repository）
-- [ ] **5.5** 编辑模式复用 EditScreen（传入 entryId → 加载已有数据 → 修改后保存）
+- [x] **5.1** 编写 `EditScreen` UI（表单：类型选择器、target 输入框、username、password、note + 保存按钮）
+- [x] **5.2** URL 类型时 target 字段增加 URL 格式校验，App 类型时不做校验
+- [x] **5.3** 实现密码可见/隐藏切换（眼睛图标，点击切换 inputType）
+- [x] **5.4** 实现 `EditViewModel`（表单状态管理、校验、保存新增/更新到 Repository）
+- [x] **5.5** 编辑模式复用 EditScreen（传入 entryId → 加载已有数据 → 修改后保存）
 
 ---
 
