@@ -38,17 +38,17 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadAllEntries() {
         viewModelScope.launch {
             repository.getAllEntries()
-                .combine(_uiState.map { it.searchQuery }.distinctUntilChanged()) { entries, query ->
-                    val filtered = if (query.isBlank()) {
+                .combine(_uiState) { entries, state ->
+                    val filtered = if (state.searchQuery.isBlank()) {
                         entries
                     } else {
+                        val q = state.searchQuery.trim()
                         entries.filter {
-                            it.target.contains(query, ignoreCase = true) ||
-                                it.username.contains(query, ignoreCase = true)
+                            it.target.contains(q, ignoreCase = true) ||
+                                it.username.contains(q, ignoreCase = true)
                         }
                     }
-                    val tab = _uiState.value.selectedTab
-                    val type = if (tab == 0) EntryType.URL else EntryType.APP
+                    val type = if (state.selectedTab == 0) EntryType.URL else EntryType.APP
                     filtered.filter { it.type == type }
                 }
                 .collect { filteredEntries ->
