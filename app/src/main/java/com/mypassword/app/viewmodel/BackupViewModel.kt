@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
 enum class BackupOperation {
     NONE,
@@ -45,8 +44,6 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _uiState = MutableStateFlow(BackupUiState())
     val uiState: StateFlow<BackupUiState> = _uiState.asStateFlow()
-
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
 
     // === 导出 ===
 
@@ -91,7 +88,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 val backupData = BackupData(entries = entries)
-                val jsonStr = json.encodeToString(BackupData.serializer(), backupData)
+                val jsonStr = backupData.toJson()
                 val encrypted = BackupEncryption.encryptForExport(
                     jsonStr.toByteArray(Charsets.UTF_8),
                     pw
@@ -149,7 +146,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                     .getOrElse { throw Exception("密码错误或文件已损坏") }
 
                 val jsonStr = String(decrypted, Charsets.UTF_8)
-                val backupData = json.decodeFromString(BackupData.serializer(), jsonStr)
+                val backupData = BackupData.fromJson(jsonStr)
 
                 if (backupData.entries.isEmpty()) {
                     _uiState.value = _uiState.value.copy(

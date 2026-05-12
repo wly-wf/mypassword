@@ -167,26 +167,34 @@ fun PasswordGeneratorDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
 
-                val options = listOf(
-                    "A-Z" to includeUpper to { includeUpper = it; regenerate() },
-                    "a-z" to includeLower to { includeLower = it; regenerate() },
-                    "0-9" to includeDigits to { includeDigits = it; regenerate() },
-                    "!@#$%" to includeSymbols to { includeSymbols = it; regenerate() }
-                )
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    options.forEach { (pair, onChange) ->
-                        val (label, checked) = pair
-                        FilterChip(
-                            selected = checked,
-                            onClick = { onChange(!checked) },
-                            label = { Text(label, fontSize = 12.sp) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    FilterChip(
+                        selected = includeUpper,
+                        onClick = { includeUpper = !includeUpper; regenerate() },
+                        label = { Text("A-Z", fontSize = 12.sp) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = includeLower,
+                        onClick = { includeLower = !includeLower; regenerate() },
+                        label = { Text("a-z", fontSize = 12.sp) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = includeDigits,
+                        onClick = { includeDigits = !includeDigits; regenerate() },
+                        label = { Text("0-9", fontSize = 12.sp) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = includeSymbols,
+                        onClick = { includeSymbols = !includeSymbols; regenerate() },
+                        label = { Text("!@#$%", fontSize = 12.sp) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

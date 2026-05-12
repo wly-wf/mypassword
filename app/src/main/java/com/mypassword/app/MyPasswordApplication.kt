@@ -9,7 +9,7 @@ import com.mypassword.app.data.db.AppDatabase
 class MyPasswordApplication : Application() {
 
     lateinit var database: AppDatabase
-        private set
+        internal set
     lateinit var sessionManager: SessionManager
         private set
 

@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.mypassword.app.data.db.dao.EntryDao
 import com.mypassword.app.data.db.entity.Entry
-import net.zetetic.database.sqlcipher.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(
     entities = [Entry::class],
@@ -23,7 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
         private const val DB_NAME = "mypassword.db"
 
         fun create(context: Context, passphrase: ByteArray): AppDatabase {
-            val factory = SupportFactory(passphrase)
+            val factory = SupportOpenHelperFactory(passphrase)
 
             return Room.databaseBuilder(
                 context.applicationContext,

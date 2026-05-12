@@ -41,10 +41,9 @@ fun UnlockScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.mode) {
-        if (uiState.mode == UnlockMode.BIOMETRIC_UNLOCK) {
-            BiometricPromptScreen(viewModel, onUnlockSuccess)
-        }
+    // 生物识别模式
+    if (uiState.mode == UnlockMode.BIOMETRIC_UNLOCK) {
+        BiometricPromptScreen(viewModel, onUnlockSuccess)
     }
 
     // 数据库创建成功即跳转

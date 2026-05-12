@@ -143,8 +143,7 @@ fun ListScreen(
                                     scope.launch {
                                         snackbarHostState.showSnackbar("密码已复制到剪贴板")
                                     }
-                                },
-                                modifier = Modifier.animateItem()
+                                }
                             )
                         }
                     }
