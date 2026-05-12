@@ -207,6 +207,7 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
     private fun createDatabase(key: ByteArray) {
         val app = getApplication<MyPasswordApplication>()
         app.database = AppDatabase.create(app, key)
+        _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING)
     }
 
     override fun onCleared() {
