@@ -41,19 +41,6 @@ fun BackupScreen(
         uri?.let { viewModel.exportToUri(it) }
     }
 
-    // 文件选择器（导入）
-    val openFileLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let {
-            context.contentResolver.takePersistableUriPermission(
-                it,
-                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            // 用户需要先输入密码再导入
-        }
-    }
-
     // 消息 Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.message) {
