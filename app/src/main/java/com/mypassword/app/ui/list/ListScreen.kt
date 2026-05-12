@@ -2,6 +2,7 @@ package com.mypassword.app.ui.list
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -138,6 +139,7 @@ fun ListScreen(
                         ) { entry ->
                             EntryCard(
                                 entry = entry,
+                                onEdit = { onAddEntry(entry.id) },
                                 onDelete = { viewModel.requestDelete(entry) },
                                 onCopyPassword = {
                                     scope.launch {
@@ -175,6 +177,7 @@ private fun SearchBar(
 @Composable
 private fun EntryCard(
     entry: Entry,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCopyPassword: () -> Unit,
     modifier: Modifier = Modifier
@@ -183,7 +186,9 @@ private fun EntryCard(
     val clipboardManager = LocalClipboardManager.current
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onEdit() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
