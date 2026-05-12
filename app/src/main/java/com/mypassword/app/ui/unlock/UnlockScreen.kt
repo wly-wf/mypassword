@@ -94,6 +94,7 @@ fun UnlockScreen(
                 text = when (uiState.mode) {
                     UnlockMode.FIRST_TIME_SETUP -> "设置主密码以保护您的数据"
                     UnlockMode.LOCKED_OUT -> "密码错误次数过多，请稍后再试"
+                    UnlockMode.WORKING -> "正在验证..."
                     else -> "请输入主密码解锁"
                 },
                 style = MaterialTheme.typography.bodyMedium,
@@ -112,6 +113,15 @@ fun UnlockScreen(
                 }
                 UnlockMode.LOCKED_OUT -> {
                     LockedOutView(uiState)
+                }
+                UnlockMode.WORKING -> {
+                    CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "正在处理...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
                 UnlockMode.LOADING -> {
                     CircularProgressIndicator()
@@ -186,7 +196,9 @@ private fun SetupPasswordForm(
             .fillMaxWidth()
             .height(52.dp),
         shape = RoundedCornerShape(12.dp),
-        enabled = uiState.passwordInput.isNotEmpty() && uiState.confirmPassword.isNotEmpty()
+        enabled = uiState.mode != UnlockMode.WORKING &&
+                  uiState.passwordInput.isNotEmpty() &&
+                  uiState.confirmPassword.isNotEmpty()
     ) {
         Text("设置并进入", style = MaterialTheme.typography.labelLarge)
     }
@@ -289,7 +301,8 @@ private fun UnlockPasswordForm(
                             },
                             onClick = { viewModel.deleteLastChar() },
                             modifier = Modifier.size(72.dp),
-                            enabled = uiState.passwordInput.isNotEmpty()
+                            enabled = uiState.mode != UnlockMode.WORKING &&
+                                      uiState.passwordInput.isNotEmpty()
                         )
                     }
                     else -> {
@@ -302,7 +315,8 @@ private fun UnlockPasswordForm(
                                 )
                             },
                             onClick = { viewModel.appendDigit(key.toInt()) },
-                            modifier = Modifier.size(72.dp)
+                            modifier = Modifier.size(72.dp),
+                            enabled = uiState.mode != UnlockMode.WORKING
                         )
                     }
                 }
@@ -319,7 +333,8 @@ private fun UnlockPasswordForm(
             .fillMaxWidth(0.6f)
             .height(48.dp),
         shape = RoundedCornerShape(12.dp),
-        enabled = uiState.passwordInput.isNotEmpty()
+        enabled = uiState.mode != UnlockMode.WORKING &&
+                  uiState.passwordInput.isNotEmpty()
     ) {
         Text("解锁", style = MaterialTheme.typography.labelLarge)
     }

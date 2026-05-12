@@ -6,12 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
 import com.mypassword.app.data.crypto.SessionManager
 import com.mypassword.app.data.db.AppDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class UnlockUiState(
     val mode: UnlockMode = UnlockMode.LOADING,
@@ -20,7 +22,8 @@ data class UnlockUiState(
     val errorMessage: String? = null,
     val errorCount: Int = 0,
     val lockoutSeconds: Int = 0,
-    val canUseBiometric: Boolean = false
+    val canUseBiometric: Boolean = false,
+    val isWorking: Boolean = false
 )
 
 enum class UnlockMode {
@@ -28,7 +31,8 @@ enum class UnlockMode {
     FIRST_TIME_SETUP,
     PASSWORD_UNLOCK,
     BIOMETRIC_UNLOCK,
-    LOCKED_OUT
+    LOCKED_OUT,
+    WORKING
 }
 
 class UnlockViewModel(application: Application) : AndroidViewModel(application) {
@@ -40,7 +44,7 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
 
     private var lockoutJob: Job? = null
     private val maxAttempts = 5
-    private val lockoutDuration = 30 // 秒
+    private val lockoutDuration = 30
 
     init {
         val isFirstTime = !sessionManager.hasMasterPassword()
@@ -57,10 +61,7 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
     // === 密码输入 ===
 
     fun onPasswordInput(value: String) {
-        _uiState.value = _uiState.value.copy(
-            passwordInput = value,
-            errorMessage = null
-        )
+        _uiState.value = _uiState.value.copy(passwordInput = value, errorMessage = null)
     }
 
     fun appendDigit(digit: Int) {
@@ -101,8 +102,25 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
             return false
         }
 
-        sessionManager.setupMasterPassword(getApplication(), pw)
-        openDatabase(pw)
+        _uiState.value = state.copy(mode = UnlockMode.WORKING, isWorking = true)
+
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    sessionManager.setupMasterPassword(app, pw)
+                    val salt = sessionManager.getSalt()
+                    val key = com.mypassword.app.data.crypto.KeyDerivation.deriveKey(pw, salt)
+                    app.database = AppDatabase.create(app, key)
+                }
+                _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    mode = UnlockMode.FIRST_TIME_SETUP,
+                    isWorking = false,
+                    errorMessage = "设置失败：${e.message}"
+                )
+            }
+        }
         return true
     }
 
@@ -110,37 +128,52 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
 
     fun verifyPassword() {
         val state = _uiState.value
-        if (state.mode == UnlockMode.LOCKED_OUT) return
+        if (state.mode == UnlockMode.LOCKED_OUT || state.mode == UnlockMode.WORKING) return
 
         _uiState.value = state.copy(errorMessage = null)
-
         val password = state.passwordInput
         if (password.isEmpty()) return
 
-        viewModelScope.launch {
-            val valid = try {
-                sessionManager.unlockWithPassword(
-                    password,
-                    sessionManager.getSalt(),
-                    sessionManager.getStoredHash()
-                )
-            } catch (e: Exception) {
-                false
-            }
+        _uiState.value = _uiState.value.copy(mode = UnlockMode.WORKING, isWorking = true)
 
-            if (valid) {
-                openDatabase(password)
-            } else {
-                val newCount = state.errorCount + 1
-                if (newCount >= maxAttempts) {
-                    startLockout()
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "密码错误，还剩 ${maxAttempts - newCount} 次机会",
-                        errorCount = newCount,
-                        passwordInput = ""
+        viewModelScope.launch {
+            try {
+                val valid = withContext(Dispatchers.IO) {
+                    sessionManager.unlockWithPassword(
+                        password,
+                        sessionManager.getSalt(),
+                        sessionManager.getStoredHash()
                     )
                 }
+
+                if (valid) {
+                    withContext(Dispatchers.IO) {
+                        val salt = sessionManager.getSalt()
+                        val key = com.mypassword.app.data.crypto.KeyDerivation.deriveKey(password, salt)
+                        app.database = AppDatabase.create(app, key)
+                    }
+                    _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
+                } else {
+                    val newCount = state.errorCount + 1
+                    if (newCount >= maxAttempts) {
+                        startLockout()
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            mode = UnlockMode.PASSWORD_UNLOCK,
+                            isWorking = false,
+                            errorMessage = "密码错误，还剩 ${maxAttempts - newCount} 次机会",
+                            errorCount = newCount,
+                            passwordInput = ""
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    mode = UnlockMode.PASSWORD_UNLOCK,
+                    isWorking = false,
+                    errorMessage = "验证失败：${e.message}",
+                    passwordInput = ""
+                )
             }
         }
     }
@@ -148,6 +181,7 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
     private fun startLockout() {
         _uiState.value = _uiState.value.copy(
             mode = UnlockMode.LOCKED_OUT,
+            isWorking = false,
             lockoutSeconds = lockoutDuration,
             passwordInput = ""
         )
@@ -181,33 +215,29 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
     fun onBiometricSuccess(cipher: javax.crypto.Cipher) {
         val success = sessionManager.unlockWithBiometric(cipher)
         if (success) {
-            // 生物识别解锁成功，用存储的密钥打开数据库
-            val key = sessionManager.getDatabaseKey()
-            createDatabase(key)
-            _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING)
+            _uiState.value = _uiState.value.copy(mode = UnlockMode.WORKING, isWorking = true)
+            viewModelScope.launch {
+                try {
+                    withContext(Dispatchers.IO) {
+                        val key = sessionManager.getDatabaseKey()
+                        app.database = AppDatabase.create(app, key)
+                    }
+                    _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
+                } catch (e: Exception) {
+                    _uiState.value = _uiState.value.copy(
+                        mode = UnlockMode.PASSWORD_UNLOCK,
+                        isWorking = false,
+                        errorMessage = "解锁失败：${e.message}"
+                    )
+                }
+            }
         } else {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "生物识别验证失败"
-            )
+            _uiState.value = _uiState.value.copy(errorMessage = "生物识别验证失败")
         }
     }
 
     fun onBiometricError() {
         switchToPasswordMode()
-    }
-
-    // === 数据库创建 ===
-
-    private fun openDatabase(password: String) {
-        val salt = sessionManager.getSalt()
-        val key = com.mypassword.app.data.crypto.KeyDerivation.deriveKey(password, salt)
-        createDatabase(key)
-    }
-
-    private fun createDatabase(key: ByteArray) {
-        val app = getApplication<MyPasswordApplication>()
-        app.database = AppDatabase.create(app, key)
-        _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING)
     }
 
     override fun onCleared() {
