@@ -2,9 +2,6 @@ package com.mypassword.app.ui.unlock
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,14 +15,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
@@ -143,10 +137,11 @@ private fun SetupPasswordForm(
         value = uiState.passwordInput,
         onValueChange = { viewModel.onSetupPasswordInput(it) },
         label = { Text("主密码") },
-        placeholder = { Text("至少 6 位字符") },
+        placeholder = { Text("输入主密码") },
         singleLine = true,
         visualTransformation = if (showPassword) VisualTransformation.None
                               else PasswordVisualTransformation(),
+        supportingText = { Text("大小写字母 + 数字，6-16 位") },
         trailingIcon = {
             IconButton(onClick = { showPassword = !showPassword }) {
                 Icon(
@@ -166,6 +161,7 @@ private fun SetupPasswordForm(
         value = uiState.confirmPassword,
         onValueChange = { viewModel.onSetupConfirmInput(it) },
         label = { Text("确认主密码") },
+        placeholder = { Text("再次输入主密码") },
         singleLine = true,
         visualTransformation = if (showConfirm) VisualTransformation.None
                               else PasswordVisualTransformation(),
@@ -209,205 +205,76 @@ private fun UnlockPasswordForm(
     viewModel: UnlockViewModel,
     uiState: com.mypassword.app.viewmodel.UnlockUiState
 ) {
-    var useFullKeyboard by remember { mutableStateOf(false) }
+    var showPw by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
-    if (useFullKeyboard) {
-        // === 全键盘模式 ===
-        var showPw by remember { mutableStateOf(false) }
-
-        OutlinedTextField(
-            value = uiState.passwordInput,
-            onValueChange = { viewModel.onPasswordInput(it) },
-            label = { Text("主密码") },
-            singleLine = true,
-            visualTransformation = if (showPw) VisualTransformation.None
-                                  else PasswordVisualTransformation(),
-            trailingIcon = {
-                IconButton(onClick = { showPw = !showPw }) {
-                    Icon(
-                        if (showPw) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                        contentDescription = null
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TextButton(onClick = { useFullKeyboard = false }) {
-            Text("切换到数字键盘")
-        }
-
-        // 错误消息
-        AnimatedVisibility(visible = uiState.errorMessage != null) {
-            Text(
-                text = uiState.errorMessage ?: "",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = { viewModel.verifyPassword() },
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            enabled = uiState.mode != UnlockMode.WORKING &&
-                      uiState.passwordInput.isNotEmpty()
-        ) {
-            Text("解锁", style = MaterialTheme.typography.labelLarge)
-        }
-    } else {
-        // === 数字键盘模式 ===
-        // 密码点阵显示
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            repeat(6) { index ->
-                val filled = index < uiState.passwordInput.length
-                Box(
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (filled) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = if (filled) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.outline,
-                            shape = CircleShape
-                        )
+    OutlinedTextField(
+        value = uiState.passwordInput,
+        onValueChange = { viewModel.onPasswordInput(it) },
+        label = { Text("主密码") },
+        placeholder = { Text("输入主密码解锁") },
+        singleLine = true,
+        visualTransformation = if (showPw) VisualTransformation.None
+                              else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { showPw = !showPw }) {
+                Icon(
+                    if (showPw) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                    contentDescription = null
                 )
             }
-        }
-
-        if (uiState.passwordInput.length > 6) {
-            Text(
-                text = "+${uiState.passwordInput.length - 6}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
-
-        AnimatedVisibility(visible = uiState.errorMessage != null) {
-            Text(
-                text = uiState.errorMessage ?: "",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-
-        // 全键盘切换按钮
-        TextButton(onClick = { useFullKeyboard = true }) {
-            Text("使用全键盘（含字母）")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        val numpadKeys = listOf(
-            listOf("1", "2", "3"),
-            listOf("4", "5", "6"),
-            listOf("7", "8", "9"),
-            listOf("bio", "0", "del")
-        )
-
-        numpadKeys.forEach { row ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(vertical = 6.dp)
-            ) {
-                row.forEach { key ->
-                    when (key) {
-                        "bio" -> {
-                            if (uiState.canUseBiometric) {
-                                NumpadKey(
-                                    content = {
-                                        Icon(
-                                            Icons.Default.Fingerprint,
-                                            contentDescription = "指纹",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                    },
-                                    onClick = { viewModel.switchToPasswordMode() },
-                                    modifier = Modifier.size(72.dp)
-                                )
-                            } else {
-                                Spacer(modifier = Modifier.size(72.dp))
-                            }
-                        }
-                        "del" -> {
-                            NumpadKey(
-                                content = { Text("⌫", fontSize = 22.sp) },
-                                onClick = { viewModel.deleteLastChar() },
-                                modifier = Modifier.size(72.dp),
-                                enabled = uiState.mode != UnlockMode.WORKING &&
-                                          uiState.passwordInput.isNotEmpty()
-                            )
-                        }
-                        else -> {
-                            NumpadKey(
-                                content = {
-                                    Text(key, fontSize = 26.sp, fontWeight = FontWeight.Medium)
-                                },
-                                onClick = { viewModel.appendDigit(key.toInt()) },
-                                modifier = Modifier.size(72.dp),
-                                enabled = uiState.mode != UnlockMode.WORKING
-                            )
-                        }
-                    }
-                }
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                focusManager.clearFocus()
+                viewModel.verifyPassword()
             }
-        }
+        ),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    )
 
-        Spacer(modifier = Modifier.height(12.dp))
+    AnimatedVisibility(visible = uiState.errorMessage != null) {
+        Text(
+            text = uiState.errorMessage ?: "",
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+    }
 
-        Button(
-            onClick = { viewModel.verifyPassword() },
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            enabled = uiState.mode != UnlockMode.WORKING &&
-                      uiState.passwordInput.isNotEmpty()
-        ) {
-            Text("解锁", style = MaterialTheme.typography.labelLarge)
+    if (uiState.canUseBiometric) {
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(onClick = { viewModel.switchToBiometricMode() }) {
+            Icon(
+                Icons.Default.Fingerprint,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text("使用指纹解锁")
         }
     }
-}
 
-@Composable
-private fun NumpadKey(
-    content: @Composable () -> Unit,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Surface(
-        modifier = modifier.clip(CircleShape).clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null,
-            enabled = enabled,
-            onClick = onClick
-        ),
-        shape = CircleShape,
-        color = if (enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+    Spacer(modifier = Modifier.height(24.dp))
+
+    Button(
+        onClick = {
+            focusManager.clearFocus()
+            viewModel.verifyPassword()
+        },
+        modifier = Modifier
+            .fillMaxWidth(0.6f)
+            .height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        enabled = uiState.mode != UnlockMode.WORKING &&
+                  uiState.passwordInput.isNotEmpty()
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            content()
-        }
+        Text("解锁", style = MaterialTheme.typography.labelLarge)
     }
 }
 

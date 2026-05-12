@@ -45,13 +45,14 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
     private val maxAttempts = 5
     private val lockoutDuration = 30
 
+    private val passwordRegex = Regex("^[a-zA-Z0-9]{6,16}$")
+
     init {
         val isFirstTime = !sessionManager.hasMasterPassword()
         val canBio = sessionManager.isBiometricAvailable()
 
         _uiState.value = _uiState.value.copy(
             mode = if (isFirstTime) UnlockMode.FIRST_TIME_SETUP
-                   else if (canBio) UnlockMode.BIOMETRIC_UNLOCK
                    else UnlockMode.PASSWORD_UNLOCK,
             canUseBiometric = canBio
         )
@@ -61,20 +62,6 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
 
     fun onPasswordInput(value: String) {
         _uiState.value = _uiState.value.copy(passwordInput = value, errorMessage = null)
-    }
-
-    fun appendDigit(digit: Int) {
-        val current = _uiState.value.passwordInput
-        if (current.length < 64) {
-            onPasswordInput(current + digit.toString())
-        }
-    }
-
-    fun deleteLastChar() {
-        val current = _uiState.value.passwordInput
-        if (current.isNotEmpty()) {
-            onPasswordInput(current.dropLast(1))
-        }
     }
 
     // === 首次设置主密码 ===
@@ -92,8 +79,8 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
         val pw = state.passwordInput
         val confirm = state.confirmPassword
 
-        if (pw.length < 6) {
-            _uiState.value = state.copy(errorMessage = "主密码至少需要 6 位字符")
+        if (!passwordRegex.matches(pw)) {
+            _uiState.value = state.copy(errorMessage = "主密码需为大小写字母+数字，6-16位")
             return false
         }
         if (pw != confirm) {
@@ -206,6 +193,13 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = _uiState.value.copy(
             mode = UnlockMode.PASSWORD_UNLOCK,
             passwordInput = ""
+        )
+    }
+
+    fun switchToBiometricMode() {
+        _uiState.value = _uiState.value.copy(
+            mode = UnlockMode.BIOMETRIC_UNLOCK,
+            errorMessage = null
         )
     }
 

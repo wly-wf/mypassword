@@ -100,7 +100,8 @@ fun ChangePasswordDialog(
                         onValueChange = { newPassword = it; errorMessage = null },
                         label = "新密码",
                         showPassword = showNew,
-                        onToggleVisibility = { showNew = !showNew }
+                        onToggleVisibility = { showNew = !showNew },
+                        supportingText = "大小写字母 + 数字，6-16 位"
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -143,8 +144,9 @@ fun ChangePasswordDialog(
                                     errorMessage = "请填写所有密码字段"
                                     return@Button
                                 }
-                                if (new.length < 6) {
-                                    errorMessage = "新密码至少需要 6 位字符"
+                                val pwRegex = Regex("^[a-zA-Z0-9]{6,16}$")
+                                if (!pwRegex.matches(new)) {
+                                    errorMessage = "新密码需为大小写字母+数字，6-16位"
                                     return@Button
                                 }
                                 if (new != confirm) {
@@ -217,7 +219,8 @@ private fun PasswordField(
     onValueChange: (String) -> Unit,
     label: String,
     showPassword: Boolean,
-    onToggleVisibility: () -> Unit
+    onToggleVisibility: () -> Unit,
+    supportingText: String? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -226,6 +229,7 @@ private fun PasswordField(
         singleLine = true,
         visualTransformation = if (showPassword) VisualTransformation.None
                               else PasswordVisualTransformation(),
+        supportingText = supportingText?.let { { Text(it) } },
         trailingIcon = {
             IconButton(onClick = onToggleVisibility) {
                 Icon(
