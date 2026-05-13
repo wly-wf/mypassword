@@ -62,20 +62,31 @@ class SessionManager(context: Context) {
         cachedKey = key
     }
 
-    /** 用 BiometricStorage 中的密钥重新绑定新密码，不改变数据库密钥 */
-    fun resetMasterPassword(newPassword: String): Boolean {
-        val dbKey = biometricStorage.loadDbKey() ?: return false
+    /** 准备密码重置：返回旧 DB 密钥和新凭据，不修改持久化状态 */
+    fun preparePasswordReset(newPassword: String): ResetCredentials? {
+        val oldDbKey = biometricStorage.loadDbKey() ?: return null
         val newSalt = KeyDerivation.generateSalt()
-        val newKey = KeyDerivation.deriveKey(newPassword, newSalt)
-        val newHash = KeyDerivation.hashForVerification(newKey)
-        prefs.edit()
-            .putString(KEY_SALT, android.util.Base64.encodeToString(newSalt, android.util.Base64.DEFAULT))
-            .putString(KEY_HASH, android.util.Base64.encodeToString(newHash, android.util.Base64.DEFAULT))
-            .apply()
-        biometricStorage.saveDbKey(dbKey)
-        cachedKey = dbKey
-        return true
+        val newDbKey = KeyDerivation.deriveKey(newPassword, newSalt)
+        val newHash = KeyDerivation.hashForVerification(newDbKey)
+        return ResetCredentials(oldDbKey, newSalt, newDbKey, newHash)
     }
+
+    /** rekey 成功后持久化新凭据 */
+    fun commitPasswordReset(creds: ResetCredentials) {
+        prefs.edit()
+            .putString(KEY_SALT, android.util.Base64.encodeToString(creds.newSalt, android.util.Base64.DEFAULT))
+            .putString(KEY_HASH, android.util.Base64.encodeToString(creds.newHash, android.util.Base64.DEFAULT))
+            .apply()
+        biometricStorage.saveDbKey(creds.newDbKey)
+        cachedKey = creds.newDbKey
+    }
+
+    data class ResetCredentials(
+        val oldDbKey: ByteArray,
+        val newSalt: ByteArray,
+        val newDbKey: ByteArray,
+        val newHash: ByteArray
+    )
 
     fun verifyOldPassword(password: String): Boolean {
         return try {

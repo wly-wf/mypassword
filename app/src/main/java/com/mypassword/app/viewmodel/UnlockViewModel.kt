@@ -263,13 +263,20 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    if (!sessionManager.resetMasterPassword(pw)) {
-                        throw Exception("重置失败，未找到已存储的密钥")
-                    }
+                    val creds = sessionManager.preparePasswordReset(pw)
+                        ?: throw Exception("未找到已存储的密钥，请确认已开启指纹解锁")
+
                     if (app.isDatabaseInitialized()) {
                         app.database.close()
                     }
-                    app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
+
+                    // 用旧密钥打开数据库，rekey 为新密钥
+                    AppDatabase.rekeyDatabase(app, creds.oldDbKey, creds.newDbKey)
+
+                    // rekey 成功后才持久化新凭据
+                    sessionManager.commitPasswordReset(creds)
+
+                    app.database = AppDatabase.create(app, creds.newDbKey)
                 }
                 _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
             } catch (e: Exception) {
