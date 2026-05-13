@@ -10,6 +10,7 @@ import com.mypassword.app.ui.unlock.UnlockScreen
 import com.mypassword.app.ui.list.ListScreen
 import com.mypassword.app.ui.edit.EditScreen
 import com.mypassword.app.ui.backup.BackupScreen
+import com.mypassword.app.ui.settings.SettingsScreen
 
 @Composable
 fun AppNavGraph(
@@ -36,8 +37,8 @@ fun AppNavGraph(
                 onAddEntry = { entryId ->
                     navController.navigate(Routes.edit(entryId))
                 },
-                onNavigateToBackup = {
-                    navController.navigate(Routes.BACKUP)
+                onNavigateToSettings = {
+                    navController.navigate(Routes.SETTINGS)
                 },
                 onNavigateToUnlock = {
                     navController.navigate(Routes.UNLOCK) {
@@ -57,10 +58,25 @@ fun AppNavGraph(
             )
         }
 
-        // 备份（待阶段七实现）
+        // 备份
         composable(Routes.BACKUP) {
             BackupScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // 设置
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToBackup = {
+                    navController.navigate(Routes.BACKUP)
+                },
+                onNavigateToUnlock = {
+                    navController.navigate(Routes.UNLOCK) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }
