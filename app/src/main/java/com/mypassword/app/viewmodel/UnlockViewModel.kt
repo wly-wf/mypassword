@@ -22,7 +22,8 @@ data class UnlockUiState(
     val errorCount: Int = 0,
     val lockoutSeconds: Int = 0,
     val canUseBiometric: Boolean = false,
-    val isWorking: Boolean = false
+    val isWorking: Boolean = false,
+    val biometricTrigger: Int = 0
 )
 
 enum class UnlockMode {
@@ -200,7 +201,8 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
     fun switchToBiometricMode() {
         _uiState.value = _uiState.value.copy(
             mode = UnlockMode.BIOMETRIC_UNLOCK,
-            errorMessage = null
+            errorMessage = null,
+            biometricTrigger = _uiState.value.biometricTrigger + 1
         )
     }
 

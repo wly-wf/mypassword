@@ -341,11 +341,28 @@ private fun BiometricPromptScreen(
         )
     }
 
-    LaunchedEffect(Unit) {
-        biometricPrompt.authenticate(promptInfo)
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.biometricTrigger) {
+        // 等待 Activity 获取窗口焦点后再弹出指纹对话框
+        var hasFocus = false
+        var attempts = 0
+        while (!hasFocus && attempts < 30) {
+            kotlinx.coroutines.delay(100)
+            hasFocus = fragmentActivity.hasWindowFocus()
+            attempts++
+        }
+        if (hasFocus) {
+            try {
+                biometricPrompt.authenticate(promptInfo)
+            } catch (_: Exception) {
+                viewModel.onBiometricError()
+            }
+        } else {
+            viewModel.onBiometricError()
+        }
     }
 
-    val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(uiState.mode) {
         if (uiState.mode == UnlockMode.LOADING) {
             onUnlockSuccess()

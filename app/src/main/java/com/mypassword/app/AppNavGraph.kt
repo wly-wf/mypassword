@@ -1,9 +1,10 @@
 package com.mypassword.app
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mypassword.app.ui.navigation.Routes
 import com.mypassword.app.ui.unlock.UnlockScreen
@@ -16,6 +17,21 @@ import com.mypassword.app.ui.settings.SettingsScreen
 fun AppNavGraph(
     navController: NavHostController = rememberNavController()
 ) {
+    val app = androidx.compose.ui.platform.LocalContext.current
+        .applicationContext as MyPasswordApplication
+    val screenLocked by app.screenLocked.collectAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(screenLocked) {
+        if (screenLocked && currentRoute != Routes.UNLOCK) {
+            navController.navigate(Routes.UNLOCK) {
+                popUpTo(0) { inclusive = true }
+            }
+            app.clearScreenLocked()
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Routes.UNLOCK
