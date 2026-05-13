@@ -1,3 +1,8 @@
+# Project docs (local only)
+CLAUDE.md
+desc.md
+todo.md
+
 # Claude local settings
 .claude/settings.local.json
 
