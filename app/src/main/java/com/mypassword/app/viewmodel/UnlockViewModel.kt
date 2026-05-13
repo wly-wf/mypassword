@@ -104,9 +104,8 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
                         app.database.close()
                     }
                     app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
+                    sessionManager.setBiometricEnabled(true)
                 }
-                // 首次设置时默认开启指纹解锁
-                sessionManager.setBiometricEnabled(true)
                 _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -134,20 +133,21 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 val valid = withContext(Dispatchers.IO) {
-                    sessionManager.unlockWithPassword(
+                    val ok = sessionManager.unlockWithPassword(
                         password,
                         sessionManager.getSalt(),
                         sessionManager.getStoredHash()
                     )
-                }
-
-                if (valid) {
-                    withContext(Dispatchers.IO) {
+                    if (ok) {
                         if (app.isDatabaseInitialized()) {
                             app.database.close()
                         }
                         app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
                     }
+                    ok
+                }
+
+                if (valid) {
                     _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
                 } else {
                     val newCount = state.errorCount + 1
@@ -167,7 +167,7 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
                 _uiState.value = _uiState.value.copy(
                     mode = UnlockMode.PASSWORD_UNLOCK,
                     isWorking = false,
-                    errorMessage = "解锁失败：${e.message}，请重试",
+                    errorMessage = "解锁失败：${e.message}",
                     passwordInput = ""
                 )
             }

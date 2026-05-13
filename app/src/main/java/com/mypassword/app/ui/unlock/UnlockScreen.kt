@@ -98,6 +98,7 @@ fun UnlockScreen(
                     UnlockMode.RESET_PASSWORD -> "设置新的主密码"
                     UnlockMode.LOCKED_OUT -> "密码错误次数过多，请稍后再试"
                     UnlockMode.WORKING -> "正在验证..."
+                    UnlockMode.LOADING -> "正在进入..."
                     else -> "请输入主密码解锁"
                 },
                 style = MaterialTheme.typography.bodyMedium,
@@ -123,17 +124,16 @@ fun UnlockScreen(
                 UnlockMode.LOCKED_OUT -> {
                     LockedOutView(uiState)
                 }
-                UnlockMode.WORKING -> {
+                UnlockMode.WORKING,
+                UnlockMode.LOADING -> {
                     CircularProgressIndicator(modifier = Modifier.size(48.dp))
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "正在处理...",
+                        if (uiState.mode == UnlockMode.WORKING) "正在处理..."
+                        else "正在进入...",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                UnlockMode.LOADING -> {
-                    CircularProgressIndicator()
                 }
             }
         }

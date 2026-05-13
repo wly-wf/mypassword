@@ -28,10 +28,7 @@ class SessionManager(context: Context) {
     // === 密码解锁 ===
 
     fun unlockWithPassword(password: String, salt: ByteArray, storedHash: ByteArray): Boolean {
-        if (!KeyDerivation.verifyPassword(password, salt, storedHash)) {
-            return false
-        }
-        cachedKey = KeyDerivation.deriveKey(password, salt)
+        cachedKey = KeyDerivation.deriveAndVerifyKey(password, salt, storedHash) ?: return false
         return true
     }
 

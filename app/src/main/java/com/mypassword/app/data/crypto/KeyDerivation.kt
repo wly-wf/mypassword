@@ -17,9 +17,9 @@ object KeyDerivation {
     private const val IV_LENGTH = 12
     private const val GCM_TAG_LENGTH = 128
 
-    // Argon2id 参数
-    private const val ARGON2_ITERATIONS = 4
-    private const val ARGON2_MEMORY_KB = 64 * 1024  // 64 MB
+    // Argon2id 参数（16MB/2iter，平衡安全与解锁速度）
+    private const val ARGON2_ITERATIONS = 2
+    private const val ARGON2_MEMORY_KB = 16 * 1024  // 16 MB
     private const val ARGON2_PARALLELISM = 4
 
     private val secureRandom = SecureRandom()
@@ -69,9 +69,27 @@ object KeyDerivation {
         val derivedKey = deriveKey(password, salt)
         val hash = hashForVerification(derivedKey)
         val result = Arrays.equals(hash, storedHash)
-        // 安全清除临时密钥
         Arrays.fill(derivedKey, 0.toByte())
         return result
+    }
+
+    /**
+     * 派生密钥并验证密码，一次 Argon2 完成两项工作。
+     * 返回派生密钥，验证失败返回 null。
+     */
+    fun deriveAndVerifyKey(
+        password: String,
+        salt: ByteArray,
+        storedHash: ByteArray
+    ): ByteArray? {
+        val derivedKey = deriveKey(password, salt)
+        val hash = hashForVerification(derivedKey)
+        return if (Arrays.equals(hash, storedHash)) {
+            derivedKey
+        } else {
+            Arrays.fill(derivedKey, 0.toByte())
+            null
+        }
     }
 
     /**
