@@ -11,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Info
@@ -155,14 +154,8 @@ fun SettingsScreen(
             SectionHeader("数据")
             SettingsItem(
                 icon = { Icon(Icons.Outlined.FileUpload, contentDescription = null) },
-                title = "导出备份",
-                subtitle = "将密码数据加密导出为 .mpbak 文件",
-                onClick = onNavigateToBackup
-            )
-            SettingsItem(
-                icon = { Icon(Icons.Outlined.FileDownload, contentDescription = null) },
-                title = "导入备份",
-                subtitle = "从 .mpbak 文件恢复密码数据",
+                title = "备份与恢复",
+                subtitle = "加密导出或导入 .mpbak 备份文件",
                 onClick = onNavigateToBackup
             )
 

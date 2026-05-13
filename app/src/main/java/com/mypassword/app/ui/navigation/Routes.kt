@@ -1,8 +1,5 @@
 package com.mypassword.app.ui.navigation
 
-/**
- * 应用导航路由定义
- */
 object Routes {
     const val UNLOCK = "unlock"
     const val LIST = "list"
