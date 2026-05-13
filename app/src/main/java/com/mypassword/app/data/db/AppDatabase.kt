@@ -24,13 +24,21 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun create(context: Context, passphrase: ByteArray): AppDatabase {
             val factory = SupportOpenHelperFactory(passphrase.copyOf())
-            return Room.databaseBuilder(
+            val db = Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
                 DB_NAME
             )
                 .openHelperFactory(factory)
                 .build()
+            // 预热：强制立即打开 SQLCipher 连接
+            // 避免惰性初始化延迟到列表页首屏查询
+            db.warmUp()
+            return db
+        }
+
+        private fun AppDatabase.warmUp() {
+            openHelper.writableDatabase
         }
 
         /**
