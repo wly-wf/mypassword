@@ -31,6 +31,8 @@ enum class UnlockMode {
     FIRST_TIME_SETUP,
     PASSWORD_UNLOCK,
     BIOMETRIC_UNLOCK,
+    FORGOT_PASSWORD,
+    RESET_PASSWORD,
     LOCKED_OUT,
     WORKING
 }
@@ -101,6 +103,8 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
                     }
                     app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
                 }
+                // 首次设置时默认开启指纹解锁
+                sessionManager.setBiometricEnabled(true)
                 _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -204,6 +208,79 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
             errorMessage = null,
             biometricTrigger = _uiState.value.biometricTrigger + 1
         )
+    }
+
+    // === 忘记密码 ===
+
+    fun startForgotPassword() {
+        _uiState.value = _uiState.value.copy(
+            mode = UnlockMode.FORGOT_PASSWORD,
+            errorMessage = null
+        )
+    }
+
+    fun onForgotPasswordBiometricSuccess() {
+        // 从 BiometricStorage 取出数据库密钥，进入重置密码界面
+        if (sessionManager.unlockWithBiometric()) {
+            _uiState.value = _uiState.value.copy(
+                mode = UnlockMode.RESET_PASSWORD,
+                passwordInput = "",
+                confirmPassword = "",
+                errorMessage = null
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                mode = UnlockMode.PASSWORD_UNLOCK,
+                errorMessage = "指纹验证失败，请确认已开启指纹解锁"
+            )
+        }
+    }
+
+    fun onForgotPasswordSetupInput(value: String) {
+        _uiState.value = _uiState.value.copy(passwordInput = value, errorMessage = null)
+    }
+
+    fun onForgotPasswordConfirmInput(value: String) {
+        _uiState.value = _uiState.value.copy(confirmPassword = value, errorMessage = null)
+    }
+
+    fun confirmResetPassword(): Boolean {
+        val state = _uiState.value
+        val pw = state.passwordInput
+        val confirm = state.confirmPassword
+
+        if (!passwordRegex.matches(pw)) {
+            _uiState.value = state.copy(errorMessage = "主密码需为大小写字母+数字，6-16位")
+            return false
+        }
+        if (pw != confirm) {
+            _uiState.value = state.copy(errorMessage = "两次密码不一致")
+            return false
+        }
+
+        _uiState.value = state.copy(mode = UnlockMode.WORKING, isWorking = true)
+
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    if (!sessionManager.resetMasterPassword(pw)) {
+                        throw Exception("重置失败，未找到已存储的密钥")
+                    }
+                    if (app.isDatabaseInitialized()) {
+                        app.database.close()
+                    }
+                    app.database = AppDatabase.create(app, sessionManager.getDatabaseKey())
+                }
+                _uiState.value = _uiState.value.copy(mode = UnlockMode.LOADING, isWorking = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    mode = UnlockMode.RESET_PASSWORD,
+                    isWorking = false,
+                    errorMessage = "重置失败：${e.message}"
+                )
+            }
+        }
+        return true
     }
 
     // === 生物识别 ===

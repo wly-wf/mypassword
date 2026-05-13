@@ -87,6 +87,8 @@ fun UnlockScreen(
             Text(
                 text = when (uiState.mode) {
                     UnlockMode.FIRST_TIME_SETUP -> "设置主密码以保护您的数据"
+                    UnlockMode.FORGOT_PASSWORD -> "使用指纹验证身份以重置密码"
+                    UnlockMode.RESET_PASSWORD -> "设置新的主密码"
                     UnlockMode.LOCKED_OUT -> "密码错误次数过多，请稍后再试"
                     UnlockMode.WORKING -> "正在验证..."
                     else -> "请输入主密码解锁"
@@ -104,6 +106,12 @@ fun UnlockScreen(
                 UnlockMode.PASSWORD_UNLOCK,
                 UnlockMode.BIOMETRIC_UNLOCK -> {
                     UnlockPasswordForm(viewModel, uiState)
+                }
+                UnlockMode.FORGOT_PASSWORD -> {
+                    ForgotPasswordPromptScreen(viewModel)
+                }
+                UnlockMode.RESET_PASSWORD -> {
+                    ResetPasswordForm(viewModel, uiState)
                 }
                 UnlockMode.LOCKED_OUT -> {
                     LockedOutView(uiState)
@@ -260,6 +268,15 @@ private fun UnlockPasswordForm(
         }
     }
 
+    Spacer(modifier = Modifier.height(4.dp))
+    TextButton(onClick = { viewModel.startForgotPassword() }) {
+        Text(
+            "忘记密码?",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+
     Spacer(modifier = Modifier.height(24.dp))
 
     Button(
@@ -367,5 +384,121 @@ private fun BiometricPromptScreen(
         if (uiState.mode == UnlockMode.LOADING) {
             onUnlockSuccess()
         }
+    }
+}
+
+@Composable
+private fun ForgotPasswordPromptScreen(viewModel: UnlockViewModel) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val fragmentActivity = context as? FragmentActivity ?: return
+
+    val promptInfo = remember {
+        androidx.biometric.BiometricPrompt.PromptInfo.Builder()
+            .setTitle("验证身份")
+            .setSubtitle("使用指纹验证以重置主密码")
+            .setNegativeButtonText("取消")
+            .setConfirmationRequired(false)
+            .build()
+    }
+
+    val biometricPrompt = remember {
+        androidx.biometric.BiometricPrompt(
+            fragmentActivity,
+            object : androidx.biometric.BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(
+                    result: androidx.biometric.BiometricPrompt.AuthenticationResult
+                ) {
+                    viewModel.onForgotPasswordBiometricSuccess()
+                }
+
+                override fun onAuthenticationError(
+                    errorCode: Int,
+                    errString: CharSequence
+                ) {
+                    viewModel.switchToPasswordMode()
+                }
+
+                override fun onAuthenticationFailed() {}
+            }
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        try {
+            biometricPrompt.authenticate(promptInfo)
+        } catch (_: Exception) {
+            viewModel.switchToPasswordMode()
+        }
+    }
+}
+
+@Composable
+private fun ResetPasswordForm(
+    viewModel: UnlockViewModel,
+    uiState: com.mypassword.app.viewmodel.UnlockUiState
+) {
+    var showPassword by remember { mutableStateOf(false) }
+    var showConfirm by remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = uiState.passwordInput,
+        onValueChange = { viewModel.onForgotPasswordSetupInput(it) },
+        label = { Text("新主密码") },
+        placeholder = { Text("输入新密码") },
+        singleLine = true,
+        visualTransformation = if (showPassword) VisualTransformation.None
+                              else PasswordVisualTransformation(),
+        supportingText = { Text("大小写字母 + 数字，6-16 位") },
+        trailingIcon = {
+            IconButton(onClick = { showPassword = !showPassword }) {
+                Icon(
+                    if (showPassword) Icons.Outlined.VisibilityOff
+                    else Icons.Outlined.Visibility,
+                    contentDescription = null
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    OutlinedTextField(
+        value = uiState.confirmPassword,
+        onValueChange = { viewModel.onForgotPasswordConfirmInput(it) },
+        label = { Text("确认新密码") },
+        placeholder = { Text("再次输入新密码") },
+        singleLine = true,
+        visualTransformation = if (showConfirm) VisualTransformation.None
+                              else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { showConfirm = !showConfirm }) {
+                Icon(
+                    if (showConfirm) Icons.Outlined.VisibilityOff
+                    else Icons.Outlined.Visibility,
+                    contentDescription = null
+                )
+            }
+        },
+        isError = uiState.errorMessage != null,
+        supportingText = uiState.errorMessage?.let { { Text(it) } },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp)
+    )
+
+    Spacer(modifier = Modifier.height(24.dp))
+
+    Button(
+        onClick = { viewModel.confirmResetPassword() },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(12.dp),
+        enabled = uiState.mode != UnlockMode.WORKING &&
+                  uiState.passwordInput.isNotEmpty() &&
+                  uiState.confirmPassword.isNotEmpty()
+    ) {
+        Text("重置密码", style = MaterialTheme.typography.labelLarge)
     }
 }

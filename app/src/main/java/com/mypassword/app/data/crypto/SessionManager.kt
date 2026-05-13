@@ -62,6 +62,21 @@ class SessionManager(context: Context) {
         cachedKey = key
     }
 
+    /** 用 BiometricStorage 中的密钥重新绑定新密码，不改变数据库密钥 */
+    fun resetMasterPassword(newPassword: String): Boolean {
+        val dbKey = biometricStorage.loadDbKey() ?: return false
+        val newSalt = KeyDerivation.generateSalt()
+        val newKey = KeyDerivation.deriveKey(newPassword, newSalt)
+        val newHash = KeyDerivation.hashForVerification(newKey)
+        prefs.edit()
+            .putString(KEY_SALT, android.util.Base64.encodeToString(newSalt, android.util.Base64.DEFAULT))
+            .putString(KEY_HASH, android.util.Base64.encodeToString(newHash, android.util.Base64.DEFAULT))
+            .apply()
+        biometricStorage.saveDbKey(dbKey)
+        cachedKey = dbKey
+        return true
+    }
+
     fun verifyOldPassword(password: String): Boolean {
         return try {
             KeyDerivation.verifyPassword(password, getSalt(), getStoredHash())
