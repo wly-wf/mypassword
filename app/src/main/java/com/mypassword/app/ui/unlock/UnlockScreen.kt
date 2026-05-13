@@ -324,10 +324,7 @@ private fun BiometricPromptScreen(
                 override fun onAuthenticationSucceeded(
                     result: androidx.biometric.BiometricPrompt.AuthenticationResult
                 ) {
-                    val cipher = result.cryptoObject?.cipher
-                    if (cipher != null) {
-                        viewModel.onBiometricSuccess(cipher)
-                    }
+                    viewModel.onBiometricSuccess()
                 }
 
                 override fun onAuthenticationError(
@@ -345,15 +342,7 @@ private fun BiometricPromptScreen(
     }
 
     LaunchedEffect(Unit) {
-        val cipher = viewModel.getBiometricCipher()
-        if (cipher != null) {
-            biometricPrompt.authenticate(
-                promptInfo,
-                androidx.biometric.BiometricPrompt.CryptoObject(cipher)
-            )
-        } else {
-            viewModel.switchToPasswordMode()
-        }
+        biometricPrompt.authenticate(promptInfo)
     }
 
     val uiState by viewModel.uiState.collectAsState()

@@ -186,6 +186,10 @@ fun ChangePasswordDialog(
                                             // 6. 用新密钥重建 Room 数据库
                                             app.database = AppDatabase.create(app, creds.newKey)
                                         }
+                                        // 如果用户开启了指纹解锁，用新密钥重建 Keystore
+                                        if (app.sessionManager.isBiometricEnabled()) {
+                                            app.sessionManager.setBiometricEnabled(true)
+                                        }
                                         isSuccess = true
                                     } catch (e: Exception) {
                                         errorMessage = e.message ?: "修改失败"

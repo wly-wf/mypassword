@@ -3,6 +3,7 @@ package com.mypassword.app.ui.settings
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.FileUpload
+import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
@@ -21,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mypassword.app.MyPasswordApplication
 import com.mypassword.app.ui.list.ChangePasswordDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,9 +33,14 @@ fun SettingsScreen(
     onNavigateToBackup: () -> Unit,
     onNavigateToUnlock: () -> Unit
 ) {
+    val context = LocalContext.current
+    val app = context.applicationContext as MyPasswordApplication
+    var fingerprintEnabled by remember { mutableStateOf(app.sessionManager.isBiometricEnabled()) }
     var showChangePassword by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+    val biometricAvailable = remember { app.sessionManager.isBiometricHardwareAvailable(app) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     if (showChangePassword) {
         ChangePasswordDialog(
@@ -92,6 +100,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("设置") },
@@ -116,6 +125,23 @@ fun SettingsScreen(
         ) {
             // 安全
             SectionHeader("安全")
+            SettingsToggleItem(
+                icon = { Icon(Icons.Outlined.Fingerprint, contentDescription = null) },
+                title = "指纹解锁",
+                subtitle = if (biometricAvailable) "开启后可使用指纹或密码解锁"
+                            else "您的设备不支持指纹解锁",
+                checked = fingerprintEnabled,
+                enabled = biometricAvailable,
+                onCheckedChange = { enabled ->
+                    val ok = app.sessionManager.setBiometricEnabled(enabled)
+                    fingerprintEnabled = ok && enabled
+                    if (enabled && !ok) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("指纹解锁开启失败，请检查设备是否录入指纹")
+                        }
+                    }
+                }
+            )
             SettingsItem(
                 icon = { Icon(Icons.Outlined.Lock, contentDescription = null) },
                 title = "修改主密码",
@@ -196,6 +222,47 @@ private fun SettingsItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun SettingsToggleItem(
+    icon: @Composable () -> Unit,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) 0.5f else 0.25f)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            icon()
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                enabled = enabled
+            )
         }
     }
 }

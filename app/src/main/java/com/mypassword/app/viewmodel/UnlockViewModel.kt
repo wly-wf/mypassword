@@ -49,12 +49,13 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         val isFirstTime = !sessionManager.hasMasterPassword()
-        val canBio = sessionManager.isBiometricAvailable()
+        val bioEnabled = sessionManager.isBiometricEnabled() && sessionManager.isBiometricAvailable()
 
         _uiState.value = _uiState.value.copy(
             mode = if (isFirstTime) UnlockMode.FIRST_TIME_SETUP
+                   else if (bioEnabled) UnlockMode.BIOMETRIC_UNLOCK
                    else UnlockMode.PASSWORD_UNLOCK,
-            canUseBiometric = canBio
+            canUseBiometric = bioEnabled
         )
     }
 
@@ -205,10 +206,8 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
 
     // === 生物识别 ===
 
-    fun getBiometricCipher() = sessionManager.getBiometricCipher()
-
-    fun onBiometricSuccess(cipher: javax.crypto.Cipher) {
-        val success = sessionManager.unlockWithBiometric(cipher)
+    fun onBiometricSuccess() {
+        val success = sessionManager.unlockWithBiometric()
         if (success) {
             _uiState.value = _uiState.value.copy(mode = UnlockMode.WORKING, isWorking = true)
             viewModelScope.launch {
