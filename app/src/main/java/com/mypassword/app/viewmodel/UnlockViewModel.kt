@@ -165,7 +165,7 @@ class UnlockViewModel(application: Application) : AndroidViewModel(application) 
                 _uiState.value = _uiState.value.copy(
                     mode = UnlockMode.PASSWORD_UNLOCK,
                     isWorking = false,
-                    errorMessage = "验证失败：${e.message}",
+                    errorMessage = "解锁失败：${e.message}，请重试",
                     passwordInput = ""
                 )
             }

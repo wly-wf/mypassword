@@ -238,7 +238,7 @@ private fun EntryCard(
                     // 删除按钮
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Outlined.Delete,
@@ -274,7 +274,7 @@ private fun EntryCard(
                 Row {
                     IconButton(
                         onClick = { showPassword = !showPassword },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             if (showPassword) Icons.Outlined.VisibilityOff
@@ -288,7 +288,7 @@ private fun EntryCard(
                             clipboardManager.setText(AnnotatedString(entry.password))
                             onCopyPassword()
                         },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             Icons.Default.ContentCopy,

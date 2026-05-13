@@ -9,13 +9,16 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -34,6 +37,7 @@ fun UnlockScreen(
     viewModel: UnlockViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val haptic = LocalHapticFeedback.current
 
     // 生物识别模式
     if (uiState.mode == UnlockMode.BIOMETRIC_UNLOCK) {
@@ -43,6 +47,7 @@ fun UnlockScreen(
     // 数据库创建成功即跳转
     LaunchedEffect(uiState.mode) {
         if (uiState.mode == UnlockMode.LOADING) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             onUnlockSuccess()
         }
     }
@@ -66,9 +71,11 @@ fun UnlockScreen(
                 color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = "🔐",
-                        fontSize = 36.sp
+                    Icon(
+                        Icons.Outlined.Lock,
+                        contentDescription = "MyPassword",
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -298,6 +305,13 @@ private fun UnlockPasswordForm(
 @Composable
 private fun LockedOutView(uiState: com.mypassword.app.viewmodel.UnlockUiState) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            Icons.Outlined.Lock,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.error
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "已锁定",
             style = MaterialTheme.typography.titleLarge,
@@ -324,6 +338,7 @@ private fun BiometricPromptScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val fragmentActivity = context as? FragmentActivity ?: return
+    val haptic = LocalHapticFeedback.current
 
     val promptInfo = remember {
         androidx.biometric.BiometricPrompt.PromptInfo.Builder()
@@ -341,6 +356,7 @@ private fun BiometricPromptScreen(
                 override fun onAuthenticationSucceeded(
                     result: androidx.biometric.BiometricPrompt.AuthenticationResult
                 ) {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     viewModel.onBiometricSuccess()
                 }
 
