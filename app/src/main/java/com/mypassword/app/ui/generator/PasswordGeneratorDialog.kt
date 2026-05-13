@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import kotlin.math.ln
 import kotlin.math.log2
 
 @Composable
@@ -100,7 +99,7 @@ fun PasswordGeneratorDialog(
                         Row {
                             IconButton(
                                 onClick = { regenerate() },
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
                                     Icons.Outlined.Refresh,
@@ -112,7 +111,7 @@ fun PasswordGeneratorDialog(
                                 onClick = {
                                     clipboardManager.setText(AnnotatedString(password))
                                 },
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(48.dp)
                             ) {
                                 Icon(
                                     Icons.Outlined.ContentCopy,
@@ -268,6 +267,8 @@ private fun calculateEntropy(password: String): Int {
     return (password.length * log2(poolSize.toDouble())).toInt()
 }
 
+private val secureRandom = java.security.SecureRandom()
+
 private fun generatePassword(
     length: Int,
     includeUpper: Boolean,
@@ -283,6 +284,5 @@ private fun generatePassword(
     }
     if (chars.isEmpty()) return ""
 
-    val secureRandom = java.security.SecureRandom()
     return (1..length).map { chars[secureRandom.nextInt(chars.length)] }.joinToString("")
 }

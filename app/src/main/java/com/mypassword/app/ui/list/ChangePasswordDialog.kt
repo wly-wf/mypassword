@@ -170,31 +170,29 @@ fun ChangePasswordDialog(
                                 scope.launch {
                                     try {
                                         withContext(Dispatchers.IO) {
-                                            // 1. 验证旧密码
                                             if (!app.sessionManager.verifyOldPassword(old)) {
                                                 throw Exception("当前密码错误")
                                             }
-
-                                            // 2. 生成新凭据（不修改持久化状态）
                                             val creds = app.sessionManager.generateNewCredentials(new)
 
-                                            // 3. 关闭 Room 数据库
                                             app.database.close()
-
-                                            // 4. 用 SQLCipher 原生 API 修改加密密钥
-                                            AppDatabase.rekeyDatabase(app, creds.oldKey, creds.newKey)
-
-                                            // 5. rekey 成功后才持久化新凭据
-                                            app.sessionManager.commitPasswordChange(
-                                                app, creds.newSalt, creds.newKey, creds.newHash
-                                            )
-
-                                            // 6. 用新密钥重建 Room 数据库
-                                            app.database = AppDatabase.create(app, creds.newKey)
+                                            try {
+                                                AppDatabase.rekeyDatabase(app, creds.oldKey, creds.newKey)
+                                                app.sessionManager.commitPasswordChange(
+                                                    app, creds.newSalt, creds.newKey, creds.newHash
+                                                )
+                                                app.database = AppDatabase.create(app, creds.newKey)
+                                            } catch (e: Exception) {
+                                                // rekey 失败，用旧密钥重建数据库避免数据丢失
+                                                app.database = AppDatabase.create(app, creds.oldKey)
+                                                throw e
+                                            }
                                         }
-                                        // 如果用户开启了指纹解锁，用新密钥重建 Keystore
-                                        if (app.sessionManager.isBiometricEnabled()) {
-                                            app.sessionManager.setBiometricEnabled(true)
+                                        // 指纹密钥必须在主线程？不，在 IO 线程安全操作 EncryptedSharedPreferences
+                                        withContext(Dispatchers.IO) {
+                                            if (app.sessionManager.isBiometricEnabled()) {
+                                                app.sessionManager.setBiometricEnabled(true)
+                                            }
                                         }
                                         isSuccess = true
                                     } catch (e: Exception) {

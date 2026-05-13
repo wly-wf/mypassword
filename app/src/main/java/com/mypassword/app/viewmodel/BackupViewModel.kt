@@ -19,12 +19,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@androidx.compose.runtime.Immutable
 enum class BackupOperation {
     NONE,
     EXPORTING,
     IMPORTING
 }
 
+@androidx.compose.runtime.Immutable
 data class BackupUiState(
     val exportPassword: String = "",
     val confirmExportPassword: String = "",

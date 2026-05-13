@@ -203,13 +203,7 @@ fun BackupScreen(
                     val importFileLauncher = rememberLauncherForActivityResult(
                         ActivityResultContracts.OpenDocument()
                     ) { uri ->
-                        uri?.let {
-                            context.contentResolver.takePersistableUriPermission(
-                                it,
-                                android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            importUri = it
-                        }
+                        importUri = uri
                     }
 
                     OutlinedButton(
@@ -227,7 +221,7 @@ fun BackupScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         ExportPasswordField(
-                            label = "导出密码",
+                            label = "导入密码",
                             value = uiState.importPassword,
                             onValueChange = { viewModel.onImportPasswordChange(it) }
                         )

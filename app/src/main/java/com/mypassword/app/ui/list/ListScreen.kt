@@ -2,6 +2,7 @@ package com.mypassword.app.ui.list
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,7 +32,7 @@ import com.mypassword.app.data.db.entity.Entry
 import com.mypassword.app.viewmodel.ListViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ListScreen(
     onAddEntry: (Long) -> Unit,
@@ -148,7 +149,8 @@ fun ListScreen(
                                     scope.launch {
                                         snackbarHostState.showSnackbar("密码已复制到剪贴板")
                                     }
-                                }
+                                },
+                                modifier = Modifier.animateItemPlacement()
                             )
                         }
                     }
