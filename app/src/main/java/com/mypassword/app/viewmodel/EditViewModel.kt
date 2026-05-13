@@ -1,6 +1,7 @@
 package com.mypassword.app.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+@Immutable
 data class EditUiState(
     val isNew: Boolean = true,
     val entryId: Long = -1,
@@ -24,7 +26,9 @@ data class EditUiState(
     val targetError: String? = null,
     val usernameError: String? = null,
     val passwordError: String? = null,
-    val saved: Boolean = false
+    val saveError: String? = null,
+    val saved: Boolean = false,
+    val isWorking: Boolean = false
 )
 
 class EditViewModel(application: Application) : AndroidViewModel(application) {
@@ -55,33 +59,37 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
     fun onTypeChange(type: EntryType) {
         _uiState.value = _uiState.value.copy(
             type = type,
-            targetError = null
+            targetError = null,
+            saveError = null
         )
     }
 
     fun onTargetChange(value: String) {
         _uiState.value = _uiState.value.copy(
             target = value,
-            targetError = null
+            targetError = null,
+            saveError = null
         )
     }
 
     fun onUsernameChange(value: String) {
         _uiState.value = _uiState.value.copy(
             username = value,
-            usernameError = null
+            usernameError = null,
+            saveError = null
         )
     }
 
     fun onPasswordChange(value: String) {
         _uiState.value = _uiState.value.copy(
             password = value,
-            passwordError = null
+            passwordError = null,
+            saveError = null
         )
     }
 
     fun onNoteChange(value: String) {
-        _uiState.value = _uiState.value.copy(note = value)
+        _uiState.value = _uiState.value.copy(note = value, saveError = null)
     }
 
     fun togglePasswordVisibility() {
@@ -96,6 +104,8 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
 
     fun save(): Boolean {
         val state = _uiState.value
+        if (state.isWorking) return false
+
         var hasError = false
 
         // 验证 target
@@ -127,30 +137,39 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
 
         if (hasError) return false
 
+        _uiState.value = _uiState.value.copy(isWorking = true, targetError = null, usernameError = null, passwordError = null)
+
         viewModelScope.launch {
-            if (state.isNew) {
-                repository.addEntry(
-                    Entry(
-                        type = state.type,
-                        target = state.target.trim(),
-                        username = state.username.trim(),
-                        password = state.password,
-                        note = state.note.trim()
+            try {
+                if (state.isNew) {
+                    repository.addEntry(
+                        Entry(
+                            type = state.type,
+                            target = state.target.trim(),
+                            username = state.username.trim(),
+                            password = state.password,
+                            note = state.note.trim()
+                        )
                     )
-                )
-            } else {
-                repository.updateEntry(
-                    Entry(
-                        id = state.entryId,
-                        type = state.type,
-                        target = state.target.trim(),
-                        username = state.username.trim(),
-                        password = state.password,
-                        note = state.note.trim()
+                } else {
+                    repository.updateEntry(
+                        Entry(
+                            id = state.entryId,
+                            type = state.type,
+                            target = state.target.trim(),
+                            username = state.username.trim(),
+                            password = state.password,
+                            note = state.note.trim()
+                        )
                     )
+                }
+                _uiState.value = _uiState.value.copy(saved = true, isWorking = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isWorking = false,
+                    saveError = "保存失败：${e.message}"
                 )
             }
-            _uiState.value = _uiState.value.copy(saved = true)
         }
         return true
     }

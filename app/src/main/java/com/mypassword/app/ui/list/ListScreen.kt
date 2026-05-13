@@ -1,6 +1,7 @@
 package com.mypassword.app.ui.list
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -121,7 +122,8 @@ fun ListScreen(
             AnimatedContent(
                 targetState = entries.isEmpty(),
                 transitionSpec = {
-                    fadeIn() togetherWith fadeOut()
+                    fadeIn(animationSpec = tween(200)) togetherWith
+                    fadeOut(animationSpec = tween(150))
                 }
             ) { isEmpty ->
                 if (isEmpty) {

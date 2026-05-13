@@ -1,6 +1,7 @@
 package com.mypassword.app.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@Immutable
 data class UnlockUiState(
     val mode: UnlockMode = UnlockMode.LOADING,
     val passwordInput: String = "",

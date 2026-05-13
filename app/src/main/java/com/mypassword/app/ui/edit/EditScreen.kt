@@ -74,7 +74,8 @@ fun EditScreen(
                 actions = {
                     TextButton(
                         onClick = { viewModel.save() },
-                        enabled = uiState.target.isNotBlank() &&
+                        enabled = !uiState.isWorking &&
+                                  uiState.target.isNotBlank() &&
                                   uiState.username.isNotBlank() &&
                                   uiState.password.isNotBlank()
                     ) {
@@ -190,13 +191,33 @@ fun EditScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = uiState.target.isNotBlank() &&
+                enabled = !uiState.isWorking &&
+                          uiState.target.isNotBlank() &&
                           uiState.username.isNotBlank() &&
                           uiState.password.isNotBlank()
             ) {
+                if (uiState.isWorking) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 Text(
-                    if (uiState.isNew) "添加" else "保存修改",
+                    if (uiState.isWorking) "保存中..."
+                    else if (uiState.isNew) "添加"
+                    else "保存修改",
                     style = MaterialTheme.typography.labelLarge
+                )
+            }
+
+            uiState.saveError?.let { error ->
+                Text(
+                    error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
         }

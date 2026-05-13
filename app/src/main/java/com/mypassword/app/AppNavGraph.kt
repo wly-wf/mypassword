@@ -1,5 +1,7 @@
 package com.mypassword.app
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,6 +14,9 @@ import com.mypassword.app.ui.list.ListScreen
 import com.mypassword.app.ui.edit.EditScreen
 import com.mypassword.app.ui.backup.BackupScreen
 import com.mypassword.app.ui.settings.SettingsScreen
+
+private const val TRANSITION_ENTER = 220
+private const val TRANSITION_EXIT = 150
 
 @Composable
 fun AppNavGraph(
@@ -36,8 +41,13 @@ fun AppNavGraph(
         navController = navController,
         startDestination = Routes.UNLOCK
     ) {
-        // 解锁
-        composable(Routes.UNLOCK) {
+        composable(
+            route = Routes.UNLOCK,
+            enterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
+        ) {
             UnlockScreen(
                 onUnlockSuccess = {
                     navController.navigate(Routes.LIST) {
@@ -47,8 +57,13 @@ fun AppNavGraph(
             )
         }
 
-        // 列表
-        composable(Routes.LIST) {
+        composable(
+            route = Routes.LIST,
+            enterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
+        ) {
             ListScreen(
                 onAddEntry = { entryId ->
                     navController.navigate(Routes.edit(entryId))
@@ -64,8 +79,23 @@ fun AppNavGraph(
             )
         }
 
-        // 编辑（待阶段五实现）
-        composable(Routes.EDIT) { backStackEntry ->
+        composable(
+            route = Routes.EDIT,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it / 3 },
+                    animationSpec = tween(TRANSITION_ENTER)
+                ) + fadeIn(tween(TRANSITION_ENTER))
+            },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it / 3 },
+                    animationSpec = tween(TRANSITION_EXIT)
+                ) + fadeOut(tween(TRANSITION_EXIT))
+            }
+        ) { backStackEntry ->
             val entryId = backStackEntry.arguments
                 ?.getString("entryId")?.toLongOrNull() ?: -1
             EditScreen(
@@ -74,15 +104,25 @@ fun AppNavGraph(
             )
         }
 
-        // 备份
-        composable(Routes.BACKUP) {
+        composable(
+            route = Routes.BACKUP,
+            enterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
+        ) {
             BackupScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        // 设置
-        composable(Routes.SETTINGS) {
+        composable(
+            route = Routes.SETTINGS,
+            enterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
+        ) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToBackup = {

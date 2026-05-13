@@ -23,7 +23,7 @@ abstract class AppDatabase : RoomDatabase() {
         private const val DB_NAME = "mypassword.db"
 
         fun create(context: Context, passphrase: ByteArray): AppDatabase {
-            val factory = SupportOpenHelperFactory(passphrase)
+            val factory = SupportOpenHelperFactory(passphrase.copyOf())
             return Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,

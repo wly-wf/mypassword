@@ -1,6 +1,7 @@
 package com.mypassword.app.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
@@ -11,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+@Immutable
 data class ListUiState(
     val selectedTab: Int = 0,
     val searchQuery: String = "",
