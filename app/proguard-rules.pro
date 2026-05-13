@@ -5,6 +5,12 @@
 -keep class org.bouncycastle.** { *; }
 -dontwarn org.bouncycastle.jcajce.provider.asymmetric.**
 -dontwarn org.bouncycastle.jce.provider.**
+-dontwarn javax.naming.**
+
+# Security-crypto (Tink annotations)
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
+-dontwarn javax.annotation.concurrent.**
 
 # Room
 -keep class * extends androidx.room.RoomDatabase
