@@ -61,17 +61,6 @@ fun EditScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
-                },
-                actions = {
-                    TextButton(
-                        onClick = { viewModel.save() },
-                        enabled = !uiState.isWorking &&
-                                  uiState.title.isNotBlank() &&
-                                  uiState.username.isNotBlank() &&
-                                  uiState.password.isNotBlank()
-                    ) {
-                        Text("保存")
-                    }
                 }
             )
         }
@@ -175,7 +164,7 @@ fun EditScreen(
                     .fillMaxWidth()
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = !uiState.isWorking &&
+                enabled = !uiState.isWorking && uiState.isDirty &&
                           uiState.title.isNotBlank() &&
                           uiState.username.isNotBlank() &&
                           uiState.password.isNotBlank()

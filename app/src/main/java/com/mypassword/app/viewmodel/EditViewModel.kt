@@ -22,6 +22,11 @@ data class EditUiState(
     val url: String = "",
     val note: String = "",
     val createdAt: Long = 0,
+    val origTitle: String = "",
+    val origUsername: String = "",
+    val origPassword: String = "",
+    val origUrl: String = "",
+    val origNote: String = "",
     val showPassword: Boolean = false,
     val titleError: String? = null,
     val usernameError: String? = null,
@@ -29,7 +34,11 @@ data class EditUiState(
     val saveError: String? = null,
     val saved: Boolean = false,
     val isWorking: Boolean = false
-)
+) {
+    val isDirty: Boolean
+        get() = isNew || title != origTitle || username != origUsername ||
+                password != origPassword || url != origUrl || note != origNote
+}
 
 class EditViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -52,7 +61,12 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
                 password = entry.password,
                 url = entry.url,
                 note = entry.note,
-                createdAt = entry.createdAt
+                createdAt = entry.createdAt,
+                origTitle = entry.title,
+                origUsername = entry.username,
+                origPassword = entry.password,
+                origUrl = entry.url,
+                origNote = entry.note
             )
         }
     }
