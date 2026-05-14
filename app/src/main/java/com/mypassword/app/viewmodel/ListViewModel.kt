@@ -42,9 +42,7 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
                         } else {
                             val q = state.searchQuery.trim()
                             entries.filter {
-                                it.title.contains(q, ignoreCase = true) ||
-                                    it.username.contains(q, ignoreCase = true) ||
-                                    it.url.contains(q, ignoreCase = true)
+                                it.title.contains(q, ignoreCase = true)
                             }
                         }
                     }

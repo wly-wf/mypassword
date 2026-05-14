@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface EntryDao {
 
-    @Query("SELECT * FROM entries ORDER BY updated_at DESC")
+    @Query("SELECT * FROM entries ORDER BY title COLLATE NOCASE ASC")
     fun getAllEntries(): Flow<List<Entry>>
 
     @Query("SELECT * FROM entries WHERE id = :id")
@@ -22,6 +22,6 @@ interface EntryDao {
     @Query("DELETE FROM entries WHERE id = :id")
     suspend fun deleteEntry(id: Long)
 
-    @Query("SELECT * FROM entries ORDER BY updated_at DESC")
+    @Query("SELECT * FROM entries ORDER BY title COLLATE NOCASE ASC")
     suspend fun getAllEntriesList(): List<Entry>
 }
