@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.mypassword.app.ui.navigation.Routes
 import com.mypassword.app.ui.unlock.UnlockScreen
 import com.mypassword.app.ui.list.ListScreen
+import com.mypassword.app.ui.detail.DetailScreen
 import com.mypassword.app.ui.edit.EditScreen
 import com.mypassword.app.ui.backup.BackupScreen
 import com.mypassword.app.ui.settings.SettingsScreen
@@ -65,8 +66,11 @@ fun AppNavGraph(
             popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
         ) {
             ListScreen(
-                onAddEntry = { entryId ->
-                    navController.navigate(Routes.edit(entryId))
+                onEntryClick = { entryId ->
+                    navController.navigate(Routes.detail(entryId))
+                },
+                onAddNew = {
+                    navController.navigate(Routes.edit(0))
                 },
                 onNavigateToSettings = {
                     navController.navigate(Routes.SETTINGS)
@@ -76,6 +80,32 @@ fun AppNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(
+            route = Routes.DETAIL,
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it / 3 },
+                    animationSpec = tween(TRANSITION_ENTER)
+                ) + fadeIn(tween(TRANSITION_ENTER))
+            },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it / 3 },
+                    animationSpec = tween(TRANSITION_EXIT)
+                ) + fadeOut(tween(TRANSITION_EXIT))
+            }
+        ) { backStackEntry ->
+            val entryId = backStackEntry.arguments
+                ?.getString("entryId")?.toLongOrNull() ?: return@composable
+            DetailScreen(
+                entryId = entryId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { navController.navigate(Routes.edit(it)) }
             )
         }
 

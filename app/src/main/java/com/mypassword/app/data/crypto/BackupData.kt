@@ -4,19 +4,19 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 data class BackupEntry(
-    val type: String,
-    val target: String,
+    val title: String,
     val username: String,
     val password: String,
-    val note: String,
+    val url: String = "",
+    val note: String = "",
     val createdAt: Long,
     val updatedAt: Long
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
-        put("type", type)
-        put("target", target)
+        put("title", title)
         put("username", username)
         put("password", password)
+        put("url", url)
         put("note", note)
         put("createdAt", createdAt)
         put("updatedAt", updatedAt)
@@ -24,10 +24,10 @@ data class BackupEntry(
 
     companion object {
         fun fromJson(json: JSONObject): BackupEntry = BackupEntry(
-            type = json.getString("type"),
-            target = json.getString("target"),
+            title = json.getString("title"),
             username = json.getString("username"),
             password = json.getString("password"),
+            url = json.optString("url", ""),
             note = json.optString("note", ""),
             createdAt = json.getLong("createdAt"),
             updatedAt = json.getLong("updatedAt")

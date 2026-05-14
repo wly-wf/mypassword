@@ -18,7 +18,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.mypassword.app.data.db.entity.EntryType
 import com.mypassword.app.ui.generator.PasswordGeneratorDialog
 import com.mypassword.app.viewmodel.EditViewModel
 
@@ -32,7 +31,6 @@ fun EditScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showGenerator by remember { mutableStateOf(false) }
 
-    // 密码生成器弹窗
     if (showGenerator) {
         PasswordGeneratorDialog(
             onDismiss = { showGenerator = false },
@@ -43,14 +41,12 @@ fun EditScreen(
         )
     }
 
-    // 加载已有条目数据
     LaunchedEffect(entryId) {
         if (entryId > 0) {
             viewModel.loadEntry(entryId)
         }
     }
 
-    // 保存成功后返回
     LaunchedEffect(uiState.saved) {
         if (uiState.saved) {
             onNavigateBack()
@@ -60,22 +56,17 @@ fun EditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(if (uiState.isNew) "添加条目" else "编辑条目")
-                },
+                title = { Text(if (uiState.isNew) "添加条目" else "编辑条目") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
                 actions = {
                     TextButton(
                         onClick = { viewModel.save() },
                         enabled = !uiState.isWorking &&
-                                  uiState.target.isNotBlank() &&
+                                  uiState.title.isNotBlank() &&
                                   uiState.username.isNotBlank() &&
                                   uiState.password.isNotBlank()
                     ) {
@@ -91,34 +82,17 @@ fun EditScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 类型选择
-            TypeSelector(
-                selectedType = uiState.type,
-                onTypeChange = { viewModel.onTypeChange(it) }
-            )
-
-            // 标识字段（网址或 App 名）
+            // 标题
             OutlinedTextField(
-                value = uiState.target,
-                onValueChange = { viewModel.onTargetChange(it) },
-                label = {
-                    Text(if (uiState.type == EntryType.URL) "网址" else "App 名称")
-                },
-                placeholder = {
-                    Text(
-                        if (uiState.type == EntryType.URL) "https://example.com"
-                        else "例如：微信、钉钉"
-                    )
-                },
+                value = uiState.title,
+                onValueChange = { viewModel.onTitleChange(it) },
+                label = { Text("标题") },
+                placeholder = { Text("例如：个人邮箱、公司 VPN") },
                 singleLine = true,
-                isError = uiState.targetError != null,
-                supportingText = uiState.targetError?.let { { Text(it) } },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (uiState.type == EntryType.URL) KeyboardType.Uri
-                                  else KeyboardType.Text
-                ),
+                isError = uiState.titleError != null,
+                supportingText = uiState.titleError?.let { { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -145,9 +119,8 @@ fun EditScreen(
                 singleLine = true,
                 isError = uiState.passwordError != null,
                 supportingText = uiState.passwordError?.let { { Text(it) } },
-                visualTransformation = if (uiState.showPassword)
-                    VisualTransformation.None
-                else PasswordVisualTransformation(),
+                visualTransformation = if (uiState.showPassword) VisualTransformation.None
+                                      else PasswordVisualTransformation(),
                 trailingIcon = {
                     Row {
                         IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
@@ -157,7 +130,6 @@ fun EditScreen(
                                 contentDescription = null
                             )
                         }
-                        // 密码生成器按钮
                         IconButton(onClick = { showGenerator = true }) {
                             Icon(
                                 Icons.Default.AutoAwesome,
@@ -171,18 +143,30 @@ fun EditScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
+            // 网址（可选）
+            OutlinedTextField(
+                value = uiState.url,
+                onValueChange = { viewModel.onUrlChange(it) },
+                label = { Text("网址（可选）") },
+                placeholder = { Text("https://example.com") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
+
             // 备注
             OutlinedTextField(
                 value = uiState.note,
                 onValueChange = { viewModel.onNoteChange(it) },
-                label = { Text("备注") },
-                placeholder = { Text("可选，附加信息") },
+                label = { Text("备注（可选）") },
+                placeholder = { Text("附加说明信息") },
                 maxLines = 3,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // 保存按钮
             Button(
@@ -192,7 +176,7 @@ fun EditScreen(
                     .height(52.dp),
                 shape = RoundedCornerShape(12.dp),
                 enabled = !uiState.isWorking &&
-                          uiState.target.isNotBlank() &&
+                          uiState.title.isNotBlank() &&
                           uiState.username.isNotBlank() &&
                           uiState.password.isNotBlank()
             ) {
@@ -220,26 +204,6 @@ fun EditScreen(
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun TypeSelector(
-    selectedType: EntryType,
-    onTypeChange: (EntryType) -> Unit
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        EntryType.entries.forEach { type ->
-            val selected = selectedType == type
-            val label = if (type == EntryType.URL) "网址" else "App"
-
-            FilterChip(
-                selected = selected,
-                onClick = { onTypeChange(type) },
-                label = { Text(label) },
-                modifier = Modifier.weight(1f)
-            )
         }
     }
 }

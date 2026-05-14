@@ -10,7 +10,6 @@ import com.mypassword.app.data.crypto.BackupData
 import com.mypassword.app.data.crypto.BackupEncryption
 import com.mypassword.app.data.crypto.BackupEntry
 import com.mypassword.app.data.db.entity.Entry
-import com.mypassword.app.data.db.entity.EntryType
 import com.mypassword.app.data.repository.EntryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,10 +77,10 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                 val entries = withContext(Dispatchers.IO) {
                     repository.getAllEntriesList().map { entry ->
                         BackupEntry(
-                            type = entry.type.name,
-                            target = entry.target,
+                            title = entry.title,
                             username = entry.username,
                             password = entry.password,
+                            url = entry.url,
                             note = entry.note,
                             createdAt = entry.createdAt,
                             updatedAt = entry.updatedAt
@@ -187,10 +186,10 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                     entries.forEach { backupEntry ->
                         repository.addEntry(
                             Entry(
-                                type = EntryType.valueOf(backupEntry.type),
-                                target = backupEntry.target,
+                                title = backupEntry.title,
                                 username = backupEntry.username,
                                 password = backupEntry.password,
+                                url = backupEntry.url,
                                 note = backupEntry.note,
                                 createdAt = backupEntry.createdAt,
                                 updatedAt = backupEntry.updatedAt
@@ -227,10 +226,10 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                     entries.forEach { backupEntry ->
                         repository.addEntry(
                             Entry(
-                                type = EntryType.valueOf(backupEntry.type),
-                                target = backupEntry.target,
+                                title = backupEntry.title,
                                 username = backupEntry.username,
                                 password = backupEntry.password,
+                                url = backupEntry.url,
                                 note = backupEntry.note,
                                 createdAt = backupEntry.createdAt,
                                 updatedAt = backupEntry.updatedAt

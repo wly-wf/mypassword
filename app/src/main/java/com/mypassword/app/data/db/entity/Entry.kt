@@ -9,17 +9,17 @@ data class Entry(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
-    @ColumnInfo(name = "type")
-    val type: EntryType,
-
-    @ColumnInfo(name = "target")
-    val target: String,
+    @ColumnInfo(name = "title")
+    val title: String,
 
     @ColumnInfo(name = "username")
     val username: String,
 
     @ColumnInfo(name = "password")
     val password: String,
+
+    @ColumnInfo(name = "url")
+    val url: String = "",
 
     @ColumnInfo(name = "note")
     val note: String = "",

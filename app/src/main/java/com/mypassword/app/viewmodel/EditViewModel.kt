@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
 import com.mypassword.app.data.db.entity.Entry
-import com.mypassword.app.data.db.entity.EntryType
 import com.mypassword.app.data.repository.EntryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,13 +16,13 @@ import kotlinx.coroutines.launch
 data class EditUiState(
     val isNew: Boolean = true,
     val entryId: Long = -1,
-    val type: EntryType = EntryType.URL,
-    val target: String = "",
+    val title: String = "",
     val username: String = "",
     val password: String = "",
+    val url: String = "",
     val note: String = "",
     val showPassword: Boolean = false,
-    val targetError: String? = null,
+    val titleError: String? = null,
     val usernameError: String? = null,
     val passwordError: String? = null,
     val saveError: String? = null,
@@ -47,45 +46,29 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(
                 isNew = false,
                 entryId = entry.id,
-                type = entry.type,
-                target = entry.target,
+                title = entry.title,
                 username = entry.username,
                 password = entry.password,
+                url = entry.url,
                 note = entry.note
             )
         }
     }
 
-    fun onTypeChange(type: EntryType) {
-        _uiState.value = _uiState.value.copy(
-            type = type,
-            targetError = null,
-            saveError = null
-        )
-    }
-
-    fun onTargetChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            target = value,
-            targetError = null,
-            saveError = null
-        )
+    fun onTitleChange(value: String) {
+        _uiState.value = _uiState.value.copy(title = value, titleError = null, saveError = null)
     }
 
     fun onUsernameChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            username = value,
-            usernameError = null,
-            saveError = null
-        )
+        _uiState.value = _uiState.value.copy(username = value, usernameError = null, saveError = null)
     }
 
     fun onPasswordChange(value: String) {
-        _uiState.value = _uiState.value.copy(
-            password = value,
-            passwordError = null,
-            saveError = null
-        )
+        _uiState.value = _uiState.value.copy(password = value, passwordError = null, saveError = null)
+    }
+
+    fun onUrlChange(value: String) {
+        _uiState.value = _uiState.value.copy(url = value, saveError = null)
     }
 
     fun onNoteChange(value: String) {
@@ -93,9 +76,7 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun togglePasswordVisibility() {
-        _uiState.value = _uiState.value.copy(
-            showPassword = !_uiState.value.showPassword
-        )
+        _uiState.value = _uiState.value.copy(showPassword = !_uiState.value.showPassword)
     }
 
     fun onPasswordGenerated(pw: String) {
@@ -108,21 +89,9 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
 
         var hasError = false
 
-        // 验证 target
-        if (state.target.isBlank()) {
-            val label = if (state.type == EntryType.URL) "网址" else "App 名称"
-            _uiState.value = _uiState.value.copy(targetError = "请输入$label")
+        if (state.title.isBlank()) {
+            _uiState.value = _uiState.value.copy(titleError = "请输入标题")
             hasError = true
-        }
-
-        if (state.type == EntryType.URL && state.target.isNotBlank()) {
-            val url = state.target.trim()
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                _uiState.value = _uiState.value.copy(
-                    targetError = "网址需要以 http:// 或 https:// 开头"
-                )
-                hasError = true
-            }
         }
 
         if (state.username.isBlank()) {
@@ -137,17 +106,17 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
 
         if (hasError) return false
 
-        _uiState.value = _uiState.value.copy(isWorking = true, targetError = null, usernameError = null, passwordError = null)
+        _uiState.value = _uiState.value.copy(isWorking = true, titleError = null, usernameError = null, passwordError = null)
 
         viewModelScope.launch {
             try {
                 if (state.isNew) {
                     repository.addEntry(
                         Entry(
-                            type = state.type,
-                            target = state.target.trim(),
+                            title = state.title.trim(),
                             username = state.username.trim(),
                             password = state.password,
+                            url = state.url.trim(),
                             note = state.note.trim()
                         )
                     )
@@ -155,10 +124,10 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
                     repository.updateEntry(
                         Entry(
                             id = state.entryId,
-                            type = state.type,
-                            target = state.target.trim(),
+                            title = state.title.trim(),
                             username = state.username.trim(),
                             password = state.password,
+                            url = state.url.trim(),
                             note = state.note.trim()
                         )
                     )

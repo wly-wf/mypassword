@@ -4,17 +4,15 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import com.mypassword.app.data.db.dao.EntryDao
 import com.mypassword.app.data.db.entity.Entry
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(
     entities = [Entry::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
-@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun entryDao(): EntryDao
@@ -30,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
                 DB_NAME
             )
                 .openHelperFactory(factory)
+                .fallbackToDestructiveMigration()
                 .build()
             // 预热：强制立即打开 SQLCipher 连接
             // 避免惰性初始化延迟到列表页首屏查询

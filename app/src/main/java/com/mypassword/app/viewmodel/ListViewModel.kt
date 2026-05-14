@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mypassword.app.MyPasswordApplication
 import com.mypassword.app.data.db.entity.Entry
-import com.mypassword.app.data.db.entity.EntryType
 import com.mypassword.app.data.repository.EntryRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -14,11 +13,7 @@ import kotlinx.coroutines.launch
 
 @Immutable
 data class ListUiState(
-    val selectedTab: Int = 0,
-    val searchQuery: String = "",
-    val entries: List<Entry> = emptyList(),
-    val showDeleteDialog: Boolean = false,
-    val entryToDelete: Entry? = null
+    val searchQuery: String = ""
 )
 
 class ListViewModel(application: Application) : AndroidViewModel(application) {
@@ -42,17 +37,16 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 repository.getAllEntries()
                     .combine(_uiState) { entries, state ->
-                        val filtered = if (state.searchQuery.isBlank()) {
+                        if (state.searchQuery.isBlank()) {
                             entries
                         } else {
                             val q = state.searchQuery.trim()
                             entries.filter {
-                                it.target.contains(q, ignoreCase = true) ||
-                                    it.username.contains(q, ignoreCase = true)
+                                it.title.contains(q, ignoreCase = true) ||
+                                    it.username.contains(q, ignoreCase = true) ||
+                                    it.url.contains(q, ignoreCase = true)
                             }
                         }
-                        val type = if (state.selectedTab == 0) EntryType.URL else EntryType.APP
-                        filtered.filter { it.type == type }
                     }
                     .collect { filteredEntries ->
                         _entries.value = filteredEntries
@@ -63,33 +57,7 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun onTabSelected(index: Int) {
-        _uiState.value = _uiState.value.copy(selectedTab = index)
-    }
-
     fun onSearchQuery(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
-    }
-
-    fun requestDelete(entry: Entry) {
-        _uiState.value = _uiState.value.copy(
-            showDeleteDialog = true,
-            entryToDelete = entry
-        )
-    }
-
-    fun confirmDelete() {
-        val entry = _uiState.value.entryToDelete ?: return
-        viewModelScope.launch {
-            repository.deleteEntry(entry.id)
-        }
-        dismissDelete()
-    }
-
-    fun dismissDelete() {
-        _uiState.value = _uiState.value.copy(
-            showDeleteDialog = false,
-            entryToDelete = null
-        )
     }
 }
