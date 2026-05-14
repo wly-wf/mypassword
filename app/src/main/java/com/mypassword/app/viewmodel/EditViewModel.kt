@@ -21,6 +21,7 @@ data class EditUiState(
     val password: String = "",
     val url: String = "",
     val note: String = "",
+    val createdAt: Long = 0,
     val showPassword: Boolean = false,
     val titleError: String? = null,
     val usernameError: String? = null,
@@ -50,7 +51,8 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
                 username = entry.username,
                 password = entry.password,
                 url = entry.url,
-                note = entry.note
+                note = entry.note,
+                createdAt = entry.createdAt
             )
         }
     }
@@ -128,7 +130,8 @@ class EditViewModel(application: Application) : AndroidViewModel(application) {
                             username = state.username.trim(),
                             password = state.password,
                             url = state.url.trim(),
-                            note = state.note.trim()
+                            note = state.note.trim(),
+                            createdAt = state.createdAt
                         )
                     )
                 }
