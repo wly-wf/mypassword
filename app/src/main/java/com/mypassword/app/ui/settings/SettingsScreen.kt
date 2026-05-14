@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Info
@@ -52,27 +51,27 @@ fun SettingsScreen(
     }
 
     if (showAbout) {
+        val versionName = try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+        } catch (_: Exception) { "1.0.0" }
+
         AlertDialog(
             onDismissRequest = { showAbout = false },
             title = { Text("关于 MyPassword") },
             text = {
                 Column {
                     Text("极简离线密码管理器")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "版本 $versionName",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "纯本地存储，Material You 设计，指纹+密码双解锁。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "开源仓库",
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    Text(
-                        "github.com/wly-wf/mypassword",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             },
@@ -82,17 +81,19 @@ fun SettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/wly-wf/mypassword"))
-                    context.startActivity(intent)
-                }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("打开仓库")
+                Row {
+                    TextButton(onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/wly-wf/mypassword"))
+                        context.startActivity(intent)
+                    }) {
+                        Text("GitHub")
+                    }
+                    TextButton(onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/wly-wf/mypassword/releases"))
+                        context.startActivity(intent)
+                    }) {
+                        Text("检查更新")
+                    }
                 }
             }
         )
