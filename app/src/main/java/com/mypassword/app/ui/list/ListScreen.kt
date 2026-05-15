@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
@@ -27,7 +26,6 @@ import com.mypassword.app.viewmodel.ListViewModel
 @Composable
 fun ListScreen(
     onEntryClick: (Long) -> Unit,
-    onAddNew: () -> Unit,
     onNavigateToUnlock: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ListViewModel = viewModel()
@@ -66,15 +64,6 @@ fun ListScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddNew,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "添加")
-            }
         }
     ) { padding ->
         // 内容区

@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
@@ -27,7 +26,6 @@ import com.mypassword.app.viewmodel.AddressListViewModel
 @Composable
 fun AddressListScreen(
     onAddressClick: (Long) -> Unit,
-    onAddNew: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AddressListViewModel = viewModel()
 ) {
@@ -60,13 +58,6 @@ fun AddressListScreen(
                     }
                 }
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddNew,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) { Icon(Icons.Default.Add, contentDescription = "添加地址") }
         }
     ) { padding ->
         AnimatedContent(
