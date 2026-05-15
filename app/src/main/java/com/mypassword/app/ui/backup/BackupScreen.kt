@@ -54,11 +54,11 @@ fun BackupScreen(
     if (uiState.showMergeDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissMergeDialog() },
-            title = { Text("导入 ${uiState.pendingImportEntries.size} 条记录") },
-            text = { Text("请选择导入方式：追加到现有数据末尾，还是清空后替换全部数据？") },
+            title = { Text("导入密码 ${uiState.pendingImportEntries.size} 条、地址 ${uiState.pendingImportAddresses.size} 条") },
+            text = { Text("请选择导入方式：去重导入（跳过已存在的相同数据），还是清空后替换全部数据？") },
             confirmButton = {
-                TextButton(onClick = { viewModel.mergeAppend() }) {
-                    Text("追加合并")
+                TextButton(onClick = { viewModel.mergeDedup() }) {
+                    Text("去重导入")
                 }
             },
             dismissButton = {
