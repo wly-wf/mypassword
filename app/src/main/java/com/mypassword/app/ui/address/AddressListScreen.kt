@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,9 +33,34 @@ fun AddressListScreen(
 ) {
     val addresses by viewModel.addresses.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    var showSearch by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = {
+                    if (showSearch) {
+                        OutlinedTextField(
+                            value = uiState.searchQuery,
+                            onValueChange = { viewModel.onSearchQuery(it) },
+                            placeholder = { Text("搜索地址...") }, singleLine = true,
+                            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)
+                        )
+                    } else {
+                        Text("地址", fontWeight = FontWeight.Bold)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        showSearch = !showSearch
+                        if (!showSearch) viewModel.onSearchQuery("")
+                    }) {
+                        Icon(if (showSearch) Icons.Outlined.Clear else Icons.Outlined.Search, contentDescription = "搜索")
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddNew,
@@ -43,35 +69,19 @@ fun AddressListScreen(
             ) { Icon(Icons.Default.Add, contentDescription = "添加地址") }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            OutlinedTextField(
-                value = uiState.searchQuery,
-                onValueChange = { viewModel.onSearchQuery(it) },
-                placeholder = { Text("搜索地址...") },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            AnimatedContent(
-                targetState = addresses.isEmpty(),
-                transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) }
-            ) { isEmpty ->
-                if (isEmpty) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                        Text("还没有保存的地址", style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(addresses, key = { it.id }) { addr ->
-                            AddressCard(addr, onClick = { onAddressClick(addr.id) },
-                                modifier = Modifier.animateItemPlacement())
-                        }
+        AnimatedContent(
+            targetState = addresses.isEmpty(),
+            modifier = Modifier.padding(padding),
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) }
+        ) { isEmpty ->
+            if (isEmpty) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("还没有保存的地址", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(addresses, key = { it.id }) { addr ->
+                        AddressCard(addr, onClick = { onAddressClick(addr.id) }, modifier = Modifier.animateItemPlacement())
                     }
                 }
             }

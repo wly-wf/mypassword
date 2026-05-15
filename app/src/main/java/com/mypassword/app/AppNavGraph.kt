@@ -17,7 +17,6 @@ import com.mypassword.app.ui.home.HomeScreen
 import com.mypassword.app.ui.detail.DetailScreen
 import com.mypassword.app.ui.edit.EditScreen
 import com.mypassword.app.ui.backup.BackupScreen
-import com.mypassword.app.ui.settings.SettingsScreen
 
 private const val TRANSITION_ENTER = 220
 private const val TRANSITION_EXIT = 150
@@ -73,7 +72,7 @@ fun AppNavGraph(
                 onPasswordAdd = { navController.navigate(Routes.edit(0)) },
                 onAddressClick = { navController.navigate(Routes.addrDetail(it)) },
                 onAddressAdd = { navController.navigate(Routes.addrEdit(0)) },
-                onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
+                onNavigateToBackup = { navController.navigate(Routes.BACKUP) },
                 onNavigateToUnlock = {
                     navController.navigate(Routes.UNLOCK) { popUpTo(0) { inclusive = true } }
                 }
@@ -165,24 +164,5 @@ fun AppNavGraph(
             )
         }
 
-        composable(
-            route = Routes.SETTINGS,
-            enterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
-            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
-            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
-            popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
-        ) {
-            SettingsScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToBackup = {
-                    navController.navigate(Routes.BACKUP)
-                },
-                onNavigateToUnlock = {
-                    navController.navigate(Routes.UNLOCK) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
     }
 }

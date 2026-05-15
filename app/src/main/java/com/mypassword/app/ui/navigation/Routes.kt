@@ -8,7 +8,6 @@ object Routes {
     const val ADDR_DETAIL = "addr_detail/{addressId}"
     const val ADDR_EDIT = "addr_edit/{addressId}"
     const val BACKUP = "backup"
-    const val SETTINGS = "settings"
 
     fun detail(entryId: Long) = "detail/$entryId"
     fun edit(entryId: Long) = "edit/$entryId"

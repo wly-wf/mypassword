@@ -10,6 +10,8 @@ import com.mypassword.app.data.repository.EntryRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.Collator
+import java.util.Locale
 
 @Immutable
 data class ListUiState(
@@ -47,7 +49,8 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                     .collect { filteredEntries ->
-                        _entries.value = filteredEntries
+                        val collator = Collator.getInstance(Locale.CHINESE)
+                        _entries.value = filteredEntries.sortedWith(compareBy(collator) { it.title })
                     }
             } catch (e: Exception) {
                 _entries.value = emptyList()

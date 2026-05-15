@@ -10,8 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,22 +28,41 @@ import com.mypassword.app.viewmodel.ListViewModel
 fun ListScreen(
     onEntryClick: (Long) -> Unit,
     onAddNew: () -> Unit,
-    onNavigateToSettings: () -> Unit,
     onNavigateToUnlock: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ListViewModel = viewModel()
 ) {
     val entries by viewModel.entries.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    var showSearch by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(
-                title = { Text("MyPassword") },
+                title = {
+                    if (showSearch) {
+                        OutlinedTextField(
+                            value = uiState.searchQuery,
+                            onValueChange = { viewModel.onSearchQuery(it) },
+                            placeholder = { Text("搜索标题...") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    } else {
+                        Text("MyPassword", fontWeight = FontWeight.Bold)
+                    }
+                },
                 actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Outlined.Settings, contentDescription = "设置")
+                    IconButton(onClick = {
+                        showSearch = !showSearch
+                        if (!showSearch) viewModel.onSearchQuery("")
+                    }) {
+                        Icon(
+                            if (showSearch) Icons.Outlined.Clear else Icons.Outlined.Search,
+                            contentDescription = "搜索"
+                        )
                     }
                 }
             )
@@ -59,65 +77,30 @@ fun ListScreen(
             }
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            SearchBar(
-                query = uiState.searchQuery,
-                onQueryChange = { viewModel.onSearchQuery(it) },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
-            // 内容区
-            AnimatedContent(
-                targetState = entries.isEmpty(),
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(200)) togetherWith
-                    fadeOut(animationSpec = tween(150))
+        // 内容区
+        AnimatedContent(
+            targetState = entries.isEmpty(),
+            modifier = Modifier.padding(padding),
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(150)) }
+        ) { isEmpty ->
+            if (isEmpty) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("还没有保存的密码", style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            ) { isEmpty ->
-                if (isEmpty) {
-                    EmptyState(modifier = Modifier.fillMaxSize())
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(
-                            horizontal = 16.dp,
-                            vertical = 8.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(
-                            items = entries,
-                            key = { it.id }
-                        ) { entry ->
-                            EntryCard(
-                                entry = entry,
-                                onClick = { onEntryClick(entry.id) },
-                                modifier = Modifier.animateItemPlacement()
-                            )
-                        }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(entries, key = { it.id }) { entry ->
+                        EntryCard(entry = entry, onClick = { onEntryClick(entry.id) },
+                            modifier = Modifier.animateItemPlacement())
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = { Text("搜索...") },
-        leadingIcon = {
-            Icon(Icons.Outlined.Search, contentDescription = null)
-        },
-        singleLine = true,
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    )
 }
 
 @Composable
@@ -155,31 +138,3 @@ private fun EntryCard(
     }
 }
 
-@Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Outlined.Lock,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "还没有保存的密码",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "点击右下角 + 开始添加",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
-        }
-    }
-}

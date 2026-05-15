@@ -10,6 +10,8 @@ import com.mypassword.app.data.repository.AddressRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.Collator
+import java.util.Locale
 
 @Immutable
 data class AddressListUiState(val searchQuery: String = "")
@@ -38,7 +40,10 @@ class AddressListViewModel(application: Application) : AndroidViewModel(applicat
                             it.title.contains(state.searchQuery.trim(), ignoreCase = true)
                         }
                     }
-                    .collect { _addresses.value = it }
+                    .collect {
+                        val collator = Collator.getInstance(Locale.CHINESE)
+                        _addresses.value = it.sortedWith(compareBy(collator) { a -> a.title })
+                    }
             } catch (_: Exception) {
                 _addresses.value = emptyList()
             }
