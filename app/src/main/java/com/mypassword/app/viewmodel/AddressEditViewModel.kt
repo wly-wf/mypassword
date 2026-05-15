@@ -76,8 +76,6 @@ class AddressEditViewModel(application: Application) : AndroidViewModel(applicat
         var err = false
         if (s.title.isBlank()) { _uiState.value = _uiState.value.copy(titleError = "请输入标题"); err = true }
         if (s.address.isBlank()) { _uiState.value = _uiState.value.copy(addressError = "请输入地址"); err = true }
-        if (s.name.isBlank()) { _uiState.value = _uiState.value.copy(nameError = "请输入姓名"); err = true }
-        if (s.phone.isBlank()) { _uiState.value = _uiState.value.copy(phoneError = "请输入电话"); err = true }
         if (err) return false
 
         _uiState.value = _uiState.value.copy(isWorking = true, titleError = null, addressError = null, nameError = null, phoneError = null)

@@ -88,10 +88,14 @@ fun AddressDetailScreen(
             Column { Text("地址", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(4.dp)); Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(addr.address, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)); IconButton(onClick = { clipboard.setText(AnnotatedString(addr.address)); scope.launch { snackbarHostState.showSnackbar("地址已复制") } }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, contentDescription = "复制", modifier = Modifier.size(18.dp)) } } }
 
             // 姓名
-            Column { Text("姓名", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(4.dp)); Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(addr.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)); IconButton(onClick = { clipboard.setText(AnnotatedString(addr.name)); scope.launch { snackbarHostState.showSnackbar("姓名已复制") } }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, contentDescription = "复制", modifier = Modifier.size(18.dp)) } } }
+            if (addr.name.isNotBlank()) {
+                Column { Text("姓名", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(4.dp)); Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(addr.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)); IconButton(onClick = { clipboard.setText(AnnotatedString(addr.name)); scope.launch { snackbarHostState.showSnackbar("姓名已复制") } }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, contentDescription = "复制", modifier = Modifier.size(18.dp)) } } }
+            }
 
             // 电话
-            Column { Text("电话", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(4.dp)); Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(addr.phone, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)); IconButton(onClick = { clipboard.setText(AnnotatedString(addr.phone)); scope.launch { snackbarHostState.showSnackbar("电话已复制") } }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, contentDescription = "复制", modifier = Modifier.size(18.dp)) } } }
+            if (addr.phone.isNotBlank()) {
+                Column { Text("电话", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary); Spacer(Modifier.height(4.dp)); Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(addr.phone, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f)); IconButton(onClick = { clipboard.setText(AnnotatedString(addr.phone)); scope.launch { snackbarHostState.showSnackbar("电话已复制") } }, modifier = Modifier.size(40.dp)) { Icon(Icons.Default.ContentCopy, contentDescription = "复制", modifier = Modifier.size(18.dp)) } } }
+            }
 
             // 备注
             if (addr.note.isNotBlank()) {
