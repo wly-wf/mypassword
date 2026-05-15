@@ -11,6 +11,9 @@ import androidx.navigation.compose.rememberNavController
 import com.mypassword.app.ui.navigation.Routes
 import com.mypassword.app.ui.unlock.UnlockScreen
 import com.mypassword.app.ui.list.ListScreen
+import com.mypassword.app.ui.address.AddressDetailScreen
+import com.mypassword.app.ui.address.AddressEditScreen
+import com.mypassword.app.ui.home.HomeScreen
 import com.mypassword.app.ui.detail.DetailScreen
 import com.mypassword.app.ui.edit.EditScreen
 import com.mypassword.app.ui.backup.BackupScreen
@@ -51,7 +54,7 @@ fun AppNavGraph(
         ) {
             UnlockScreen(
                 onUnlockSuccess = {
-                    navController.navigate(Routes.LIST) {
+                    navController.navigate(Routes.HOME) {
                         popUpTo(Routes.UNLOCK) { inclusive = true }
                     }
                 }
@@ -59,26 +62,20 @@ fun AppNavGraph(
         }
 
         composable(
-            route = Routes.LIST,
+            route = Routes.HOME,
             enterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
             exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
             popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
             popExitTransition = { fadeOut(tween(TRANSITION_EXIT)) }
         ) {
-            ListScreen(
-                onEntryClick = { entryId ->
-                    navController.navigate(Routes.detail(entryId))
-                },
-                onAddNew = {
-                    navController.navigate(Routes.edit(0))
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Routes.SETTINGS)
-                },
+            HomeScreen(
+                onPasswordClick = { navController.navigate(Routes.detail(it)) },
+                onPasswordAdd = { navController.navigate(Routes.edit(0)) },
+                onAddressClick = { navController.navigate(Routes.addrDetail(it)) },
+                onAddressAdd = { navController.navigate(Routes.addrEdit(0)) },
+                onNavigateToSettings = { navController.navigate(Routes.SETTINGS) },
                 onNavigateToUnlock = {
-                    navController.navigate(Routes.UNLOCK) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    navController.navigate(Routes.UNLOCK) { popUpTo(0) { inclusive = true } }
                 }
             )
         }
@@ -132,6 +129,28 @@ fun AppNavGraph(
                 entryId = entryId,
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+
+        composable(
+            route = Routes.ADDR_DETAIL,
+            enterTransition = { slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(TRANSITION_ENTER)) + fadeIn(tween(TRANSITION_ENTER)) },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it / 3 }, animationSpec = tween(TRANSITION_EXIT)) + fadeOut(tween(TRANSITION_EXIT)) }
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("addressId")?.toLongOrNull() ?: return@composable
+            AddressDetailScreen(addressId = id, onNavigateBack = { navController.popBackStack() }, onNavigateToEdit = { navController.navigate(Routes.addrEdit(it)) })
+        }
+
+        composable(
+            route = Routes.ADDR_EDIT,
+            enterTransition = { slideInHorizontally(initialOffsetX = { it / 3 }, animationSpec = tween(TRANSITION_ENTER)) + fadeIn(tween(TRANSITION_ENTER)) },
+            exitTransition = { fadeOut(tween(TRANSITION_EXIT)) },
+            popEnterTransition = { fadeIn(tween(TRANSITION_ENTER)) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it / 3 }, animationSpec = tween(TRANSITION_EXIT)) + fadeOut(tween(TRANSITION_EXIT)) }
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("addressId")?.toLongOrNull() ?: -1
+            AddressEditScreen(addressId = id, onNavigateBack = { navController.popBackStack() })
         }
 
         composable(

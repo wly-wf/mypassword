@@ -4,18 +4,21 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.mypassword.app.data.db.dao.AddressDao
 import com.mypassword.app.data.db.dao.EntryDao
+import com.mypassword.app.data.db.entity.Address
 import com.mypassword.app.data.db.entity.Entry
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(
-    entities = [Entry::class],
-    version = 2,
+    entities = [Entry::class, Address::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun entryDao(): EntryDao
+    abstract fun addressDao(): AddressDao
 
     companion object {
         private const val DB_NAME = "mypassword.db"

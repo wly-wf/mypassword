@@ -31,12 +31,14 @@ fun ListScreen(
     onAddNew: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToUnlock: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: ListViewModel = viewModel()
 ) {
     val entries by viewModel.entries.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("MyPassword") },
