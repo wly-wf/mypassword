@@ -154,7 +154,7 @@ fun SettingsScreen(
             SettingsItem(
                 icon = { Icon(Icons.Outlined.Info, contentDescription = null) },
                 title = "关于 MyPassword",
-                subtitle = "版本 1.0 · 查看开源仓库",
+                subtitle = "查看开源仓库",
                 onClick = { showAbout = true }
             )
         }

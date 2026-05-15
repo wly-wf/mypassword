@@ -124,7 +124,7 @@ fun BackupScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "将所有密码加密导出为 .mpbak 文件，可用于换机迁移。",
+                        "将所有信息加密导出为 .mpbak 文件，可用于换机迁移。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -190,7 +190,7 @@ fun BackupScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "从 .mpbak 文件恢复密码数据。导入时需要输入导出时设置的密码。",
+                        "从 .mpbak 文件恢复数据。导入时需要输入导出时设置的密码。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

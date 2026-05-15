@@ -33,17 +33,12 @@ fun HomeScreen(
             onDismissRequest = { showAddChoice = false },
             title = { Text("添加") },
             text = { Text("请选择要添加的内容类型") },
-            confirmButton = {
-                TextButton(onClick = { showAddChoice = false; onPasswordAdd() }) {
-                    Text("添加密码")
-                }
-            },
+            confirmButton = {},
             dismissButton = {
                 Row {
+                    TextButton(onClick = { showAddChoice = false; onPasswordAdd() }) { Text("密码") }
+                    TextButton(onClick = { showAddChoice = false; onAddressAdd() }) { Text("地址") }
                     TextButton(onClick = { showAddChoice = false }) { Text("取消") }
-                    TextButton(onClick = { showAddChoice = false; onAddressAdd() }) {
-                        Text("添加地址")
-                    }
                 }
             }
         )
